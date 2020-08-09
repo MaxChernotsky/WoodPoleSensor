@@ -92,6 +92,7 @@
 #include <project_zero.h>
 #include "ti_ble_config.h"
 #include <util.h>
+#include "sunlightService.h"
 
 /*********************************************************************
  * MACROS
@@ -615,6 +616,7 @@ static void ProjectZero_init(void)
     DevInfo_AddService();                      // Device Information Service
 
     // Add services to GATT server and give ID of this task for Indication acks.
+    SunlightService_AddService(selfEntity);
     LedService_AddService(selfEntity);
     ButtonService_AddService(selfEntity);
     DataService_AddService(selfEntity);
