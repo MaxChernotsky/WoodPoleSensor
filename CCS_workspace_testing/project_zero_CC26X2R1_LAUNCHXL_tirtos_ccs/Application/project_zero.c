@@ -141,12 +141,16 @@
 #define PZ_SEND_PARAM_UPD_EVT    8  /* Request parameter update req be sent        */
 #define PZ_CONN_EVT              9  /* Connection Event End notice                 */
 #define PZ_READ_RPA_EVT         10  /* Read RPA event                              */
+#define PZ_MSG_PERIODIC_TIMER   11 /* Timer has expired, set characteristic value */
 
 // Supervision timeout conversion rate to miliseconds
 #define CONN_TIMEOUT_MS_CONVERSION            10
 
 // Connection interval conversion rate to miliseconds
 #define CONN_INTERVAL_MS_CONVERSION           1.25
+
+// Default timeout of sunlight timer
+#define DEFAULT_SUNLIGHT_TIMEOUT              5000
 
 /*********************************************************************
  * TYPEDEFS
@@ -328,6 +332,10 @@ static Clock_Struct clkRpaRead;
 static uint8_t button0State = 0;
 static uint8_t button1State = 0;
 
+//Clock struct for Periodic Notifications
+static Clock_Struct myClock; // SOLUTION
+static uint32_t myVar = 0;
+
 // Variable used to store the number of messages pending once OAD completes
 // The application cannot reboot until all pending messages are sent
 static uint8_t numPendingMsgs = 0;
@@ -443,6 +451,9 @@ static void ProjectZero_bootManagerCheck(PIN_Handle buttonPinHandle,
                                          uint8_t revertIo,
                                          uint8_t eraseIo);
 
+static void sunCharChanged(uint16_t connHandle, uint8_t paramID, uint16_t len, uint8_t *pValue);
+static void myClockSwiFxn(uintptr_t arg0);
+
 /*********************************************************************
  * EXTERN FUNCTIONS
  */
@@ -491,6 +502,12 @@ static DataServiceCBs_t ProjectZero_Data_ServiceCBs =
 static oadTargetCBs_t ProjectZero_oadCBs =
 {
     .pfnOadWrite = ProjectZero_processOadWriteCB // Write Callback.
+};
+
+// The type Data_ServiceCBs_t is defined in sunlightService.h
+static sunlightServiceCBs_t ProjectZero_Sunlight_ServiceCBs = {
+    .pfnChangeCb = sunCharChanged,
+    .pfnCfgChangeCb = NULL
 };
 
 /*********************************************************************
@@ -551,6 +568,16 @@ static void ProjectZero_init(void)
     // Note: Used to transfer control to application thread from e.g. interrupts.
     Queue_construct(&appMsgQueue, NULL);
     appMsgQueueHandle = Queue_handle(&appMsgQueue);
+
+    // clockParams is only used during init and can be on the stack.
+    Clock_Params myClockParams;
+    // Insert default params
+    Clock_Params_init(&myClockParams);
+    // Set a period, so it times out periodically without jitter
+    myClockParams.period = DEFAULT_SUNLIGHT_TIMEOUT * (1000/Clock_tickPeriod),
+    // Initialize the clock object / Clock_Struct previously added globally.
+    Clock_construct(&myClock, myClockSwiFxn, 0, // Initial delay before first timeout
+                    &myClockParams);
 
     // ******************************************************************
     // Hardware initialization
@@ -619,7 +646,7 @@ static void ProjectZero_init(void)
     LedService_AddService(selfEntity);
     ButtonService_AddService(selfEntity);
     DataService_AddService(selfEntity);
-    SunlightService_AddService(selfEntity);
+    SunlightService_AddService( selfEntity );
 
     // Open the OAD module and add the OAD service to the application
     if(OAD_SUCCESS != OAD_open(OAD_DEFAULT_INACTIVITY_TIME))
@@ -655,6 +682,7 @@ static void ProjectZero_init(void)
     LedService_RegisterAppCBs(&ProjectZero_LED_ServiceCBs);
     ButtonService_RegisterAppCBs(&ProjectZero_Button_ServiceCBs);
     DataService_RegisterAppCBs(&ProjectZero_Data_ServiceCBs);
+    SunlightService_RegisterAppCBs( &ProjectZero_Sunlight_ServiceCBs);
 
     // Placeholder variable for characteristic intialization
     uint8_t initVal[40] = {0};
@@ -671,6 +699,13 @@ static void ProjectZero_init(void)
     // Initalization of characteristics in Data_Service that can provide data.
     DataService_SetParameter(DS_STRING_ID, sizeof(initString), initString);
     DataService_SetParameter(DS_STREAM_ID, DS_STREAM_LEN, initVal);
+
+    // Initalization of characteristics in sunlightService that are readable.
+    uint8_t sunlightService_sunlightValue_initVal[SUNLIGHTSERVICE_SUNLIGHTVALUE_LEN] = {0};
+    SunlightService_SetParameter(SUNLIGHTSERVICE_SUNLIGHTVALUE_ID, SUNLIGHTSERVICE_SUNLIGHTVALUE_LEN, sunlightService_sunlightValue_initVal);
+
+    uint16_t sunlightService_sunlightPeriod_initVal = DEFAULT_SUNLIGHT_TIMEOUT;
+    SunlightService_SetParameter(SUNLIGHTSERVICE_UPDATEPERIOD_ID, SUNLIGHTSERVICE_UPDATEPERIOD_LEN, &sunlightService_sunlightPeriod_initVal);
 
     // Start Bond Manager and register callback
     VOID GAPBondMgr_Register(&ProjectZero_BondMgrCBs);
@@ -1074,6 +1109,15 @@ static void ProjectZero_processApplicationMessage(pzMsg_t *pMsg)
         ProjectZero_processConnEvt((Gap_ConnEventRpt_t *)(pMsg->pData));
         break;
 
+      case PZ_MSG_PERIODIC_TIMER:
+      {
+            SunlightService_SetParameter(SUNLIGHTSERVICE_SUNLIGHTVALUE_ID,
+                                          SUNLIGHTSERVICE_SUNLIGHTVALUE_LEN,
+                                          &myVar);
+            myVar++;
+      }
+      break;
+
       case PZ_READ_RPA_EVT:
       {
         uint8_t* pRpaNew;
@@ -1244,6 +1288,8 @@ static void ProjectZero_processGapMessage(gapEventHdr_t *pMsg)
                         ANSI_COLOR(FG_GREEN)"%s"ANSI_COLOR(ATTR_RESET),
                       (uintptr_t)addrStr);
 
+            Clock_start(Clock_handle(&myClock));
+
             // If we are just connecting after an OAD send SVC changed
             if(sendSvcChngdOnNextBoot == TRUE)
             {
@@ -1279,6 +1325,8 @@ static void ProjectZero_processGapMessage(gapEventHdr_t *pMsg)
         // Cancel the OAD if one is going on
         // A disconnect forces the peer to re-identify
         OAD_cancel();
+
+        Clock_stop(Clock_handle(&myClock));
     }
     break;
 
@@ -2062,6 +2110,9 @@ static void ProjectZero_handleButtonPress(pzButtonState_t *pState)
         ButtonService_SetParameter(BS_BUTTON0_ID,
                                    sizeof(pState->state),
                                    &pState->state);
+
+        SunlightService_SetParameter(SUNLIGHTSERVICE_SUNLIGHTVALUE_ID, SUNLIGHTSERVICE_SUNLIGHTVALUE_LEN, &myVar);
+        myVar++;
         break;
     case CONFIG_PIN_BTN2:
         ButtonService_SetParameter(BS_BUTTON1_ID,
@@ -3009,6 +3060,42 @@ static void ProjectZero_bootManagerCheck(PIN_Handle buttonPinHandle,
 
         return;
     }
+}
+
+/*
+ * @brief   SWI handler function for periodic clock expiry
+ *
+ * @param   arg0 - Passed by TI-RTOS clock module
+ */
+static void myClockSwiFxn(uintptr_t arg0)
+{
+  // Can't call blocking TI-RTOS calls or BLE APIs from here.
+  // .. Send a message to the Task that something is afoot.
+  ProjectZero_enqueueMsg(PZ_MSG_PERIODIC_TIMER, NULL); // Not sending any data here, just a signal
+}
+
+/*
+ * @brief   Callback from Sunlight service to app
+ *          Invoked on characteristic value changed
+ *
+ * @param   connHandle - connection handle on which the transaction occurred
+ * @param   paramID - ID of the char that is written to
+ * @param   len - Length of data written
+ * @param   pValue - Pointer to new data that is written
+ */
+static void sunCharChanged(uint16_t connHandle, uint8_t paramID, uint16_t len, uint8_t *pValue)
+{
+
+    if((paramID == SUNLIGHTSERVICE_UPDATEPERIOD_ID) &&
+        (len == SUNLIGHTSERVICE_UPDATEPERIOD_LEN))
+    {
+        uint16_t myTimeoutInMs = BUILD_UINT16(pValue[0],
+                                              pValue[1]);
+        Clock_stop(Clock_handle(&myClock));
+        Clock_setPeriod(Clock_handle(&myClock), myTimeoutInMs * (1000/Clock_tickPeriod));
+        Clock_start(Clock_handle(&myClock));
+    }
+
 }
 
 /*********************************************************************

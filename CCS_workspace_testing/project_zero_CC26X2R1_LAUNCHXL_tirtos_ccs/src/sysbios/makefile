@@ -17,11 +17,11 @@ CCOPTS = --endian=little -mv7M4 --abi=eabi --float_support=fpv4spd16 -q -ms --op
 
 BIOS_INC = -I"/Users/maxchernotsky/ti/simplelink_cc13x2_26x2_sdk_4_20_00_35/kernel/tirtos/packages/"
 ANNEX_INCS = 
-INCS = $(BIOS_INC) $(ANNEX_INCS) -I"/Users/maxchernotsky/ti/simplelink_cc13x2_26x2_sdk_4_20_00_35/source/" -I"/Users/maxchernotsky/ti/simplelink_cc13x2_26x2_sdk_4_20_00_35/kernel/tirtos/packages/" -I"/Applications/ti/xdctools_3_61_00_16_core/packages/" -I"../" -I"/packages//"  -I/Applications/CCSV9_CC2640/ccs/tools/compiler/ti-cgt-arm_18.12.4.LTS/include 
+INCS = $(BIOS_INC) $(ANNEX_INCS) -I"/Users/maxchernotsky/ti/simplelink_cc13x2_26x2_sdk_4_20_00_35/source/" -I"/Users/maxchernotsky/ti/simplelink_cc13x2_26x2_sdk_4_20_00_35/kernel/tirtos/packages/" -I"/Applications/ti/xdctools_3_61_00_16_core/packages/" -I"../" -I"/packages//"  -I/Applications/CCSV9_CC2640/ccs/tools/compiler/ti-cgt-arm_18.12.6.LTS/include 
 
-CC = /Applications/CCSV9_CC2640/ccs/tools/compiler/ti-cgt-arm_18.12.4.LTS/bin/armcl -c $(CCOPTS)
-ASM = /Applications/CCSV9_CC2640/ccs/tools/compiler/ti-cgt-arm_18.12.4.LTS/bin/armcl -c $(CCOPTS)
-AR = /Applications/CCSV9_CC2640/ccs/tools/compiler/ti-cgt-arm_18.12.4.LTS/bin/armar rq
+CC = /Applications/CCSV9_CC2640/ccs/tools/compiler/ti-cgt-arm_18.12.6.LTS/bin/armcl -c $(CCOPTS)
+ASM = /Applications/CCSV9_CC2640/ccs/tools/compiler/ti-cgt-arm_18.12.6.LTS/bin/armcl -c $(CCOPTS)
+AR = /Applications/CCSV9_CC2640/ccs/tools/compiler/ti-cgt-arm_18.12.6.LTS/bin/armar rq
 
 DEL = rm -f
 CP = cp -f

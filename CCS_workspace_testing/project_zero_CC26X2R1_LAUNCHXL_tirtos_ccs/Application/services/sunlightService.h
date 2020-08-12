@@ -53,8 +53,22 @@ extern "C"
 * CONSTANTS
 */
 
+#ifdef DeviceFamily_CC26X0R2
+  #define LINKDB_CONNHANDLE_INVALID CONNHANDLE_INVALID
+#endif //DeviceFamily_CC26X0R2
+
 // Service UUID
 #define SUNLIGHTSERVICE_SERV_UUID 0xBA55
+
+//  Characteristic defines
+#define SUNLIGHTSERVICE_SUNLIGHTVALUE_ID   0
+#define SUNLIGHTSERVICE_SUNLIGHTVALUE_UUID 0x2BAD
+#define SUNLIGHTSERVICE_SUNLIGHTVALUE_LEN  4
+
+//  Characteristic defines
+#define SUNLIGHTSERVICE_UPDATEPERIOD_ID   1
+#define SUNLIGHTSERVICE_UPDATEPERIOD_UUID 0x2BAE
+#define SUNLIGHTSERVICE_UPDATEPERIOD_LEN  2
 
 /*********************************************************************
  * TYPEDEFS

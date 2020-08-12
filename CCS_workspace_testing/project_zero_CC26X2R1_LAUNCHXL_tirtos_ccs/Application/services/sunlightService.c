@@ -70,6 +70,16 @@ CONST uint8_t sunlightServiceUUID[ATT_BT_UUID_SIZE] =
   LO_UINT16(SUNLIGHTSERVICE_SERV_UUID), HI_UINT16(SUNLIGHTSERVICE_SERV_UUID)
 };
 
+// sunlightValue UUID
+CONST uint8_t sunlightService_SunlightValueUUID[ATT_UUID_SIZE] =
+{
+  TI_BASE_UUID_128(SUNLIGHTSERVICE_SUNLIGHTVALUE_UUID)
+};
+// updatePeriod UUID
+CONST uint8_t sunlightService_UpdatePeriodUUID[ATT_UUID_SIZE] =
+{
+  TI_BASE_UUID_128(SUNLIGHTSERVICE_UPDATEPERIOD_UUID)
+};
 
 /*********************************************************************
  * LOCAL VARIABLES
@@ -84,6 +94,19 @@ static sunlightServiceCBs_t *pAppCBs = NULL;
 // Service declaration
 static CONST gattAttrType_t sunlightServiceDecl = { ATT_BT_UUID_SIZE, sunlightServiceUUID };
 
+// Characteristic "SunlightValue" Properties (for declaration)
+static uint8_t sunlightService_SunlightValueProps = GATT_PROP_NOTIFY;
+
+// Characteristic "SunlightValue" Value variable
+static uint8_t sunlightService_SunlightValueVal[SUNLIGHTSERVICE_SUNLIGHTVALUE_LEN] = {0};
+
+// Characteristic "SunlightValue" CCCD
+static gattCharCfg_t *sunlightService_SunlightValueConfig;
+// Characteristic "UpdatePeriod" Properties (for declaration)
+static uint8_t sunlightService_UpdatePeriodProps = GATT_PROP_READ | GATT_PROP_WRITE;
+
+// Characteristic "UpdatePeriod" Value variable
+static uint8_t sunlightService_UpdatePeriodVal[SUNLIGHTSERVICE_UPDATEPERIOD_LEN] = {0};
 
 /*********************************************************************
 * Profile Attributes - Table
@@ -98,6 +121,41 @@ static gattAttribute_t sunlightServiceAttrTbl[] =
     0,
     (uint8_t *)&sunlightServiceDecl
   },
+    // SunlightValue Characteristic Declaration
+    {
+      { ATT_BT_UUID_SIZE, characterUUID },
+      GATT_PERMIT_READ,
+      0,
+      &sunlightService_SunlightValueProps
+    },
+      // SunlightValue Characteristic Value
+      {
+        { ATT_UUID_SIZE, sunlightService_SunlightValueUUID },
+        GATT_PERMIT_READ,
+        0,
+        sunlightService_SunlightValueVal
+      },
+      // SunlightValue CCCD
+      {
+        { ATT_BT_UUID_SIZE, clientCharCfgUUID },
+        GATT_PERMIT_READ | GATT_PERMIT_WRITE,
+        0,
+        (uint8 *)&sunlightService_SunlightValueConfig
+      },
+    // UpdatePeriod Characteristic Declaration
+    {
+      { ATT_BT_UUID_SIZE, characterUUID },
+      GATT_PERMIT_READ,
+      0,
+      &sunlightService_UpdatePeriodProps
+    },
+      // UpdatePeriod Characteristic Value
+      {
+        { ATT_UUID_SIZE, sunlightService_UpdatePeriodUUID },
+        GATT_PERMIT_READ | GATT_PERMIT_WRITE,
+        0,
+        sunlightService_UpdatePeriodVal
+      },
 };
 
 /*********************************************************************
@@ -134,6 +192,15 @@ extern bStatus_t SunlightService_AddService( uint8_t rspTaskId )
 {
   uint8_t status;
 
+  // Allocate Client Characteristic Configuration table
+  sunlightService_SunlightValueConfig = (gattCharCfg_t *)ICall_malloc( sizeof(gattCharCfg_t) * linkDBNumConns );
+  if ( sunlightService_SunlightValueConfig == NULL )
+  {
+    return ( bleMemAllocError );
+  }
+
+  // Initialize Client Characteristic Configuration attributes
+  GATTServApp_InitCharCfg( LINKDB_CONNHANDLE_INVALID, sunlightService_SunlightValueConfig );
   // Register GATT attribute list and CBs with GATT Server App
   status = GATTServApp_RegisterService( sunlightServiceAttrTbl,
                                         GATT_NUM_ATTRS( sunlightServiceAttrTbl ),
@@ -178,6 +245,33 @@ bStatus_t SunlightService_SetParameter( uint8_t param, uint16_t len, void *value
   bStatus_t ret = SUCCESS;
   switch ( param )
   {
+    case SUNLIGHTSERVICE_SUNLIGHTVALUE_ID:
+      if ( len == SUNLIGHTSERVICE_SUNLIGHTVALUE_LEN )
+      {
+        memcpy(sunlightService_SunlightValueVal, value, len);
+
+        // Try to send notification.
+        GATTServApp_ProcessCharCfg( sunlightService_SunlightValueConfig, (uint8_t *)&sunlightService_SunlightValueVal, FALSE,
+                                    sunlightServiceAttrTbl, GATT_NUM_ATTRS( sunlightServiceAttrTbl ),
+                                    INVALID_TASK_ID,  sunlightService_ReadAttrCB);
+      }
+      else
+      {
+        ret = bleInvalidRange;
+      }
+      break;
+
+    case SUNLIGHTSERVICE_UPDATEPERIOD_ID:
+      if ( len == SUNLIGHTSERVICE_UPDATEPERIOD_LEN )
+      {
+        memcpy(sunlightService_UpdatePeriodVal, value, len);
+      }
+      else
+      {
+        ret = bleInvalidRange;
+      }
+      break;
+
     default:
       ret = INVALIDPARAMETER;
       break;
@@ -200,6 +294,10 @@ bStatus_t SunlightService_GetParameter( uint8_t param, uint16_t *len, void *valu
   bStatus_t ret = SUCCESS;
   switch ( param )
   {
+    case SUNLIGHTSERVICE_UPDATEPERIOD_ID:
+      memcpy(value, sunlightService_UpdatePeriodVal, SUNLIGHTSERVICE_UPDATEPERIOD_LEN);
+      break;
+
     default:
       ret = INVALIDPARAMETER;
       break;
@@ -229,6 +327,33 @@ static bStatus_t sunlightService_ReadAttrCB( uint16_t connHandle, gattAttribute_
 {
   bStatus_t status = SUCCESS;
 
+  // See if request is regarding the SunlightValue Characteristic Value
+if ( ! memcmp(pAttr->type.uuid, sunlightService_SunlightValueUUID, pAttr->type.len) )
+  {
+    if ( offset > SUNLIGHTSERVICE_SUNLIGHTVALUE_LEN )  // Prevent malicious ATT ReadBlob offsets.
+    {
+      status = ATT_ERR_INVALID_OFFSET;
+    }
+    else
+    {
+      *pLen = MIN(maxLen, SUNLIGHTSERVICE_SUNLIGHTVALUE_LEN - offset);  // Transmit as much as possible
+      memcpy(pValue, pAttr->pValue + offset, *pLen);
+    }
+  }
+  // See if request is regarding the UpdatePeriod Characteristic Value
+else if ( ! memcmp(pAttr->type.uuid, sunlightService_UpdatePeriodUUID, pAttr->type.len) )
+  {
+    if ( offset > SUNLIGHTSERVICE_UPDATEPERIOD_LEN )  // Prevent malicious ATT ReadBlob offsets.
+    {
+      status = ATT_ERR_INVALID_OFFSET;
+    }
+    else
+    {
+      *pLen = MIN(maxLen, SUNLIGHTSERVICE_UPDATEPERIOD_LEN - offset);  // Transmit as much as possible
+      memcpy(pValue, pAttr->pValue + offset, *pLen);
+    }
+  }
+  else
   {
     // If we get here, that means you've forgotten to add an if clause for a
     // characteristic value attribute in the attribute table that has READ permissions.
@@ -267,6 +392,23 @@ static bStatus_t sunlightService_WriteAttrCB( uint16_t connHandle, gattAttribute
     // Allow only notifications.
     status = GATTServApp_ProcessCCCWriteReq( connHandle, pAttr, pValue, len,
                                              offset, GATT_CLIENT_CFG_NOTIFY);
+  }
+  // See if request is regarding the UpdatePeriod Characteristic Value
+  else if ( ! memcmp(pAttr->type.uuid, sunlightService_UpdatePeriodUUID, pAttr->type.len) )
+  {
+    if ( offset + len > SUNLIGHTSERVICE_UPDATEPERIOD_LEN )
+    {
+      status = ATT_ERR_INVALID_OFFSET;
+    }
+    else
+    {
+      // Copy pValue into the variable we point to from the attribute table.
+      memcpy(pAttr->pValue + offset, pValue, len);
+
+      // Only notify application if entire expected value is written
+      if ( offset + len == SUNLIGHTSERVICE_UPDATEPERIOD_LEN)
+        paramID = SUNLIGHTSERVICE_UPDATEPERIOD_ID;
+    }
   }
   else
   {
