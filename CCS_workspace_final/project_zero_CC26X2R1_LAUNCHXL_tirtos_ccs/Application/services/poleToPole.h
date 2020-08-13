@@ -59,7 +59,7 @@ extern "C"
 //  Characteristic defines
 #define POLETOPOLE_ALLDEVICES_ID   0
 #define POLETOPOLE_ALLDEVICES_UUID 0xA00E
-#define POLETOPOLE_ALLDEVICES_LEN  251
+#define POLETOPOLE_ALLDEVICES_LEN  4
 
 /*********************************************************************
  * TYPEDEFS

@@ -188,6 +188,7 @@ bStatus_t PoleToPole_RegisterAppCBs( poleToPoleCBs_t *appCallbacks )
   }
 }
 
+
 /*
  * PoleToPole_SetParameter - Set a PoleToPole parameter.
  *
