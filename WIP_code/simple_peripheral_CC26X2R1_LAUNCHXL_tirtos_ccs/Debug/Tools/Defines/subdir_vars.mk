@@ -1,0 +1,12 @@
+################################################################################
+# Automatically-generated file. Do not edit!
+################################################################################
+
+# Add inputs and outputs from these tool invocations to the build variables 
+OPT_SRCS += \
+../Tools/Defines/config_def.opt 
+
+OPT_SRCS__QUOTED += \
+"../Tools/Defines/config_def.opt" 
+
+
