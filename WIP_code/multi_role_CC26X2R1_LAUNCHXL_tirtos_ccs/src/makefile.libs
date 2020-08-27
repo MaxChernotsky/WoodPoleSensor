@@ -1,6 +1,6 @@
 #
 # This file was generated based on the configuration script:
-#     /Users/maxchernotsky/Documents/GitHub/WoodPoleSensor/test/multi_role_CC26X2R1_LAUNCHXL_tirtos_ccs/multi_role_app.cfg
+#     /Users/maxchernotsky/Documents/GitHub/WoodPoleSensor/WIP_code/multi_role_CC26X2R1_LAUNCHXL_tirtos_ccs/multi_role_app.cfg
 #
 # This makefile may be included in other makefiles that need to build
 # the libraries containing the compiled source files generated as
@@ -14,7 +14,7 @@
 #
 # The absolute path to the generated source directory (at the time the
 # sources were generated) is:
-#    /Users/maxchernotsky/Documents/GitHub/WoodPoleSensor/test/multi_role_CC26X2R1_LAUNCHXL_tirtos_ccs/src
+#    /Users/maxchernotsky/Documents/GitHub/WoodPoleSensor/WIP_code/multi_role_CC26X2R1_LAUNCHXL_tirtos_ccs/src
 #
 GEN_SRC_DIR ?= ../src
 
