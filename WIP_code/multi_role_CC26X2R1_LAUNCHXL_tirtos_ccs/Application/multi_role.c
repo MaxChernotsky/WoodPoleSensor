@@ -511,12 +511,6 @@ static void multi_role_init(void)
                       MR_PERIODIC_EVT_PERIOD, 0, false,
                       (UArg)&periodicUpdateData);
 
-  //Util_constructClock(&clkConnGatt, multi_role_clockHandler, CONN_TIMER_DELAY, 0, false, MR_EVT_SVC_DISC);
-
-
-
-
-
   // Init key debouncer
   Board_initKeys(multi_role_keyChangeHandler);
 
@@ -915,10 +909,7 @@ static void multi_role_processGapMsg(gapEventHdr_t *pMsg)
       Log_info0("Setting connHandle...");
       mrConnHandle  = connList[0].connHandle;
 
-      //Log_info0("Starting clock...");
-      //Util_startClock(&clkConnGatt);
       multi_role_enqueueMsg(MR_EVT_SVC_DISC, NULL);
-
 
       if (numConn < MAX_NUM_BLE_CONNS)
       {
@@ -991,6 +982,7 @@ static void multi_role_processGapMsg(gapEventHdr_t *pMsg)
      case GAP_LINK_PARAM_UPDATE_EVENT:
       {
         gapLinkUpdateEvent_t *pPkt = (gapLinkUpdateEvent_t *)pMsg;
+        Log_info0("in gap link param update");
 
         // Get the address from the connection handle
         linkDBInfo_t linkInfo;
@@ -999,7 +991,7 @@ static void multi_role_processGapMsg(gapEventHdr_t *pMsg)
 
           if(pPkt->status == SUCCESS)
           {
-              //Log_info2("Updated params for %s, connTimeout: %d", (uintptr_t)Util_convertBdAddr2Str(linkInfo.addr),linkInfo.connTimeout*CONN_TIMEOUT_MS_CONVERSION);
+              Log_info2("Updated params for %s, connTimeout: %d", (uintptr_t)Util_convertBdAddr2Str(linkInfo.addr),linkInfo.connTimeout*CONN_TIMEOUT_MS_CONVERSION);
               //Display_printf(dispHandle, MR_ROW_CUR_CONN, 0,"Updated: %s, connTimeout:%d",Util_convertBdAddr2Str(linkInfo.addr),linkInfo.connTimeout*CONN_TIMEOUT_MS_CONVERSION);
           }
           else
@@ -1019,6 +1011,10 @@ static void multi_role_processGapMsg(gapEventHdr_t *pMsg)
           // Free list element
           ICall_free(connHandleEntry);
         }
+
+
+
+
         break;
       }
 
@@ -1216,6 +1212,8 @@ static uint8_t multi_role_processGATTMsg(gattMsgEvent_t *pMsg)
   // Get connection index from handle
   uint8_t connIndex = multi_role_getConnIndex(pMsg->connHandle);
   MULTIROLE_ASSERT(connIndex < MAX_NUM_BLE_CONNS);
+
+  Log_info0("in processGATTMsg");
 
   if (pMsg->method == ATT_FLOW_CTRL_VIOLATED_EVENT)
   {
@@ -1490,8 +1488,6 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
 
 
       Log_info1("Scanning stopped: numReport = %d", numReport);
-      //multi_role_autoConnect();
-      //multi_role_doConnect(0);
 
       break;
     }
@@ -2020,13 +2016,6 @@ static void multi_role_handleKeys(uint8_t keys)
     {
       //right button handler
       multi_role_doConnect(0);
-      //multi_role_doSelectConn(0);
-
-      //Util_startClock(&clkConnGatt);
-
-
-
-
 
     }
   }
@@ -2301,6 +2290,7 @@ static void multi_role_processPairState(mrPairStateData_t *pPairData)
   {
     case GAPBOND_PAIRING_STATE_STARTED:
       //Display_printf(dispHandle, MR_ROW_SECURITY, 0, "Pairing started");
+        Log_info0("Pairing started");
       break;
 
     case GAPBOND_PAIRING_STATE_COMPLETE:
@@ -2308,6 +2298,7 @@ static void multi_role_processPairState(mrPairStateData_t *pPairData)
       {
         linkDBInfo_t linkInfo;
 
+        Log_info0("Pairing success");
         //Display_printf(dispHandle, MR_ROW_SECURITY, 0, "Pairing success");
 
         if (linkDB_GetInfo(pPairData->connHandle, &linkInfo) == SUCCESS)
@@ -2320,7 +2311,7 @@ static void multi_role_processPairState(mrPairStateData_t *pPairData)
           {
             // Update the address of the peer to the ID address
             //Display_printf(dispHandle, MR_ROW_NON_CONN, 0, "Addr updated: %s",Util_convertBdAddr2Str(linkInfo.addr));
-
+              Log_info1("Dev using RPA, Addr Updated to: %s", (uintptr_t)Util_convertBdAddr2Str(linkInfo.addr));
             // Update the connection list with the ID address
             uint8_t i = multi_role_getConnIndex(pPairData->connHandle);
 
@@ -2332,6 +2323,7 @@ static void multi_role_processPairState(mrPairStateData_t *pPairData)
       else
       {
         //Display_printf(dispHandle, MR_ROW_SECURITY, 0, "Pairing fail: %d", status);
+          Log_info1("Pairing fail: %d", status);
       }
       break;
 
@@ -2339,10 +2331,12 @@ static void multi_role_processPairState(mrPairStateData_t *pPairData)
       if (status == SUCCESS)
       {
         //Display_printf(dispHandle, MR_ROW_SECURITY, 0, "Encryption success");
+          Log_info0("Encryption success");
       }
       else
       {
         //Display_printf(dispHandle, MR_ROW_SECURITY, 0, "Encryption failed: %d", status);
+          Log_info1("Encryption failed: %d", status);
       }
       break;
 
@@ -2350,10 +2344,12 @@ static void multi_role_processPairState(mrPairStateData_t *pPairData)
       if (status == SUCCESS)
       {
         //Display_printf(dispHandle, MR_ROW_SECURITY, 0, "Bond save success");
+          Log_info0("Bond save success");
       }
       else
       {
         //Display_printf(dispHandle, MR_ROW_SECURITY, 0, "Bond save failed: %d", status);
+          Log_info1("Bond save failed: %d", status);
       }
 
       break;
@@ -2410,7 +2406,7 @@ static void multi_role_startSvcDiscovery(void)
   // Discover GATT Server's Rx MTU size
   req.clientRxMTU = mrMaxPduSize - L2CAP_HDR_SIZE;
   Log_info1("Client RX MTU: %d", (int)req.clientRxMTU);
-  printf("Client RX MTU: %d\n", req.clientRxMTU);
+
 
   // ATT MTU size should be set to the minimum of the Client Rx MTU
   // and Server Rx MTU values
@@ -2648,7 +2644,6 @@ bool multi_role_doConnect(uint8_t index)
 
 
   //Display_printf(dispHandle, MR_ROW_NON_CONN, 0, "Connecting...");
-  //multi_role_doSelectConn(index);
 
   return (true);
 }
@@ -2666,6 +2661,7 @@ bool multi_role_doSelectConn(uint8_t index)
 {
 
 
+    Log_info0("in doselectconn");
   // index cannot be equal to or greater than MAX_NUM_BLE_CONNS
   MULTIROLE_ASSERT(index < MAX_NUM_BLE_CONNS);
 
@@ -2674,6 +2670,7 @@ bool multi_role_doSelectConn(uint8_t index)
   if (connList[index].charHandle == 0)
   {
     // Initiate service discovery
+      Log_info1("Initiating service discovery with device %d", index);
     multi_role_enqueueMsg(MR_EVT_SVC_DISC, NULL);
   }
 
