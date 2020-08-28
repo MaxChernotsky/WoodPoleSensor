@@ -1,2 +1,4 @@
 # WoodPoleSensor
- WIP_Code -> code needed for development of the final device. 
+ WIP_code -> code needed for development of the final device
+ 
+	
