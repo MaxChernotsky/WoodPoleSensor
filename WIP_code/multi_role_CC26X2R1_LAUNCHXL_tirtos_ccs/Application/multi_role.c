@@ -86,6 +86,8 @@ Target Device: cc13x2_26x2
 #include "multi_role_menu.h"
 #include "multi_role.h"
 
+#include <ti/sysbios/family/arm/cc26xx/Seconds.h>
+
 /*********************************************************************
  * MACROS
  */
@@ -160,6 +162,12 @@ int ownChannel = 41; //41-A
 int foundCorrectDev = 0;
 
 char manuToPrint[100];
+
+uint32_t timePreAdv = 0;
+uint32_t timePostAdv = 0;
+uint32_t timeDiff = 0;
+
+bool timeServer = false;
 
 /*********************************************************************
 * TYPEDEFS
@@ -401,6 +409,8 @@ static void multi_role_updateRPA(void);
 
 static char * util_arrtohex(uint8_t const *src, uint8_t src_len, uint8_t *dst, uint8_t dst_len, uint8_t reverse);
 
+static void multi_role_timeSend(void);
+
 /*********************************************************************
  * EXTERN FUNCTIONS
 */
@@ -599,6 +609,8 @@ static void multi_role_init(void)
   //Initialize GAP layer for Peripheral and Central role and register to receive GAP events
   GAP_DeviceInit(GAP_PROFILE_PERIPHERAL | GAP_PROFILE_CENTRAL, selfEntity,
                  addrMode, &pRandomAddress);
+
+  Seconds_set(1598997542);
 
 }
 
@@ -1574,21 +1586,40 @@ static void multi_role_processAdvEvent(mrGapAdvEventData_t *pEventData)
     case GAP_EVT_ADV_START_AFTER_ENABLE:
       BLE_LOG_INT_TIME(0, BLE_LOG_MODULE_APP, "APP : ---- GAP_EVT_ADV_START_AFTER_ENABLE", 0);
       mrIsAdvertising = true;
+
+      //
+
       //Log_info1("Adv set %d Enabled", (uintptr_t)(uint8_t *)pEventData->pBuf);
       //Display_printf(dispHandle, MR_ROW_ADVERTIS, 0, "Adv Set %d Enabled",*(uint8_t *)(pEventData->pBuf));
+      Log_info1("Adv Set %d Enabled", *(uint8_t *)(pEventData->pBuf));
+
+      if (timeServer)
+      {
+          timePostAdv = Seconds_get();
+          Log_info1("Time post adv: %d", timePostAdv);
+          timeDiff = timePostAdv - timePreAdv;
+          Log_info1("Time diff: %d", timeDiff);
+          timeServer = false;
+      }//end if statement for time server functions
+
+
+
       break;
 
     case GAP_EVT_ADV_END_AFTER_DISABLE:
       mrIsAdvertising = false;
       //Display_printf(dispHandle, MR_ROW_ADVERTIS, 0, "Adv Set %d Disabled",*(uint8_t *)(pEventData->pBuf));
+      Log_info1("Adv Set %d Disabled", *(uint8_t *)(pEventData->pBuf));
       break;
 
     case GAP_EVT_ADV_START:
       //Display_printf(dispHandle, MR_ROW_ADVERTIS, 0, "Adv Started %d Enabled",*(uint8_t *)(pEventData->pBuf));
+        Log_info1("Adv Started: %d Set Enable", *(uint8_t *)(pEventData->pBuf));
       break;
 
     case GAP_EVT_ADV_END:
       //Display_printf(dispHandle, MR_ROW_ADVERTIS, 0, "Adv Ended %d Disabled",*(uint8_t *)(pEventData->pBuf));
+        Log_info1("Adv Ended: %d Disabled", *(uint8_t *)(pEventData->pBuf));
       break;
 
     case GAP_EVT_ADV_SET_TERMINATED:
@@ -2015,7 +2046,8 @@ static void multi_role_handleKeys(uint8_t keys)
     if (rtnVal == 0)
     {
       //right button handler
-      multi_role_doConnect(0);
+      //multi_role_doConnect(0);
+        multi_role_timeSend();
 
     }
   }
@@ -2991,6 +3023,18 @@ char * util_arrtohex(uint8_t const *src, uint8_t src_len,
     }
     return((char *)dst);
 }
+
+static void multi_role_timeSend(void) {
+
+    GapAdv_disable(advHandle);
+    timePreAdv = Seconds_get();
+    Log_info1("Current Time: %d", timePreAdv);
+    timeServer = true;
+    GapAdv_enable(advHandle, GAP_ADV_ENABLE_OPTIONS_USE_MAX, 0);
+
+
+
+}//end multi_role_timeSend function
 
 
 
