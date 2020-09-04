@@ -154,28 +154,21 @@ uint8_t advData2[] =
    LO_UINT16(0xfff0),
    HI_UINT16(0xfff0),
 
-   0x07,
+   0x08,
    GAP_ADTYPE_MANUFACTURER_SPECIFIC,
    //Company Identifier
 
 
-   //channel
-   0x41,
+   //current time value
+   0x00, //first two digits
+   0x00, //next two digits
+   0x00, //next two digits
+   0x00, //next two digits
 
-   //current device ID -- A0 - Z9
-   0x00,
-   0x00,
-
-
-   //status of device (Y - ALL OK, N - NOT OKAY, R - RELAY)
-   //Y - sent when current device is OK
-   //N - sent when current device is NOT OK
-   //R - sent when current device is relaying that another device is NOT OK
-   0x52,
-
-   //relay device (device that is not okay
-   0x00,
-   0x00
+   //delay values
+   0xEE,
+   0xFF,
+   0xAA
 
 
 };

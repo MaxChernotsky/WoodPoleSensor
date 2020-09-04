@@ -171,6 +171,6 @@ extern void setBondManagerParameters();
 // Advertisement Set Number 1
 extern GapAdv_params_t advParams1;
 extern uint8_t advData1[18];
-extern uint8_t advData2[19];
+extern uint8_t advData2[20];
 
 extern uint8_t scanResData1[21];

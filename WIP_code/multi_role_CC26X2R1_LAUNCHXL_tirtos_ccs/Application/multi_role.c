@@ -164,11 +164,17 @@ int foundCorrectDev = 0;
 char manuToPrint[100];
 
 uint32_t timePreAdv = 0;
+uint32_t ntimePreAdv = 0;
 uint32_t timePostAdv = 0;
+uint32_t ntimePostAdv = 0;
 uint32_t timeDiff = 0;
+uint32_t ntimeDiff = 0;
 
 bool timeServer = false;
 
+Seconds_Time ts;
+
+int count = 0;
 /*********************************************************************
 * TYPEDEFS
 */
@@ -348,7 +354,7 @@ static mrConnRec_t connList[MAX_NUM_BLE_CONNS];
 
 // Advertising handles
 static uint8 advHandle;
-static uint8 advHandleNotOK;
+static uint8 advHandleTime;
 
 static bool mrIsAdvertising = false;
 // Address mode
@@ -1148,22 +1154,22 @@ static void multi_role_advertInit(void)
 
 
     // Create Advertisement set #2 and assign handle
-    GapAdv_create(&multi_role_advCB, &advParams1, &advHandleNotOK);
+    GapAdv_create(&multi_role_advCB, &advParams1, &advHandleTime);
 
     // Load advertising data for set #2 that is statically allocated by the app
-    GapAdv_loadByHandle(advHandleNotOK, GAP_ADV_DATA_TYPE_ADV, sizeof(advData2), advData2);
+    GapAdv_loadByHandle(advHandleTime, GAP_ADV_DATA_TYPE_ADV, sizeof(advData2), advData2);
 
 
 
     // Set event mask for set #2
-    GapAdv_setEventMask(advHandleNotOK,
+    GapAdv_setEventMask(advHandleTime,
                         GAP_ADV_EVT_MASK_START_AFTER_ENABLE |
                         GAP_ADV_EVT_MASK_END_AFTER_DISABLE |
                         GAP_ADV_EVT_MASK_SET_TERMINATED);
 
     BLE_LOG_INT_TIME(0, BLE_LOG_MODULE_APP, "APP : ---- GapAdv_enable", 0);
     // Enable legacy advertising for set #2
-    status = GapAdv_enable(advHandle, GAP_ADV_ENABLE_OPTIONS_USE_MAX , 0);
+    status = GapAdv_enable(advHandleTime, GAP_ADV_ENABLE_OPTIONS_USE_MAX , 0);
 
     Log_info0("Initialise Advertising...");
 
@@ -1581,6 +1587,9 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
  */
 static void multi_role_processAdvEvent(mrGapAdvEventData_t *pEventData)
 {
+
+
+
   switch (pEventData->event)
   {
     case GAP_EVT_ADV_START_AFTER_ENABLE:
@@ -1593,15 +1602,46 @@ static void multi_role_processAdvEvent(mrGapAdvEventData_t *pEventData)
       //Display_printf(dispHandle, MR_ROW_ADVERTIS, 0, "Adv Set %d Enabled",*(uint8_t *)(pEventData->pBuf));
       Log_info1("Adv Set %d Enabled", *(uint8_t *)(pEventData->pBuf));
 
-      if (timeServer)
-      {
-          timePostAdv = Seconds_get();
-          Log_info1("Time post adv: %d", timePostAdv);
-          timeDiff = timePostAdv - timePreAdv;
-          Log_info1("Time diff: %d", timeDiff);
-          timeServer = false;
-      }//end if statement for time server functions
 
+      if ((timeServer==true) && (count<2))
+            {
+                Seconds_getTime(&ts);
+                timePostAdv = ts.secs;
+                ntimePostAdv = ts.nsecs;
+                timeDiff = timePostAdv - timePreAdv;
+                ntimeDiff = ntimePostAdv - ntimePreAdv;
+
+                //update advert data with delay information
+
+                char tempHexDelay[8];
+                int increment = 0;
+
+                sprintf(tempHexDelay, "%X", ntimeDiff);
+
+                printf("nTime (hex): %s\n", tempHexDelay);
+
+                GapAdv_prepareLoadByHandle(advHandleTime, GAP_ADV_FREE_OPTION_DONT_FREE);
+                size_t tempSize = 2;
+
+                //add each value to the advData
+                for (int i = 17; i < 20; i++) {
+                    char tempChar[2];
+                    long int tempLong = 0;
+                    strncpy(tempChar, tempHexDelay + increment, tempSize);
+                    //printf("AdvData[%d]: %s\n", i, tempChar);
+                    tempLong = strtol(tempChar, 0, 16);
+                    char toAdvData = tempLong;
+
+                    advData2[i] = toAdvData;
+                    increment = increment+2;
+                }//end for loop
+
+                GapAdv_loadByHandle(advHandleTime, GAP_ADV_DATA_TYPE_ADV, sizeof(advData2), advData2);
+                //timeServer=false;
+                Log_info2("Count[%d]: Diff: %d", count, ntimeDiff);
+                count = count+1;
+
+            }//end if for time server functions
 
 
       break;
@@ -1615,6 +1655,8 @@ static void multi_role_processAdvEvent(mrGapAdvEventData_t *pEventData)
     case GAP_EVT_ADV_START:
       //Display_printf(dispHandle, MR_ROW_ADVERTIS, 0, "Adv Started %d Enabled",*(uint8_t *)(pEventData->pBuf));
         Log_info1("Adv Started: %d Set Enable", *(uint8_t *)(pEventData->pBuf));
+
+
       break;
 
     case GAP_EVT_ADV_END:
@@ -3027,11 +3069,47 @@ char * util_arrtohex(uint8_t const *src, uint8_t src_len,
 static void multi_role_timeSend(void) {
 
     GapAdv_disable(advHandle);
-    timePreAdv = Seconds_get();
-    Log_info1("Current Time: %d", timePreAdv);
-    timeServer = true;
-    GapAdv_enable(advHandle, GAP_ADV_ENABLE_OPTIONS_USE_MAX, 0);
+    GapAdv_disable(advHandleTime);
+    //timePreAdv = Seconds_getTime(*ts);
+    Seconds_getTime(&ts);
+    timePreAdv = ts.secs;
+    ntimePreAdv = ts.nsecs;
 
+    char tempHexTime[9];
+    char tempHexnTime[8];
+
+    int increment = 0;
+
+
+    sprintf(tempHexTime, "%X", timePreAdv);
+    sprintf(tempHexnTime, "%X", ntimePreAdv);
+
+    printf("Time (hex): %s\n", tempHexTime);
+    printf("nTime (hex): %s\n", tempHexnTime);
+
+    GapAdv_prepareLoadByHandle(advHandleTime, GAP_ADV_FREE_OPTION_DONT_FREE);
+    size_t tempSize = 2;
+
+    //add each value to the advData
+    for (int i = 13; i < 17; i++) {
+        char tempChar[2];
+        long int tempLong = 0;
+        strncpy(tempChar, tempHexTime + increment, tempSize);
+        //printf("AdvData[%d]: %s\n", i, tempChar);
+        tempLong = strtol(tempChar, 0, 16);
+        char toAdvData = tempLong;
+
+        advData2[i] = toAdvData;
+        increment = increment+2;
+    }//end for loop
+
+
+    GapAdv_loadByHandle(advHandleTime, GAP_ADV_DATA_TYPE_ADV, sizeof(advData2), advData2);
+
+    Log_info1("Current Time: %d", timePreAdv);
+    Log_info1("nanoseconds: %d", ntimePreAdv);
+    timeServer = true;
+    GapAdv_enable(advHandleTime, GAP_ADV_ENABLE_OPTIONS_USE_MAX_EVENTS, 100);
 
 
 }//end multi_role_timeSend function
