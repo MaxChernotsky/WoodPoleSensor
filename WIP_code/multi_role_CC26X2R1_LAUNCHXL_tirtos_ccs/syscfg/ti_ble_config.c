@@ -86,6 +86,21 @@ GapAdv_params_t advParams1 = {
   .sid =          0
 };
 
+// Advertisement Params 2
+GapAdv_params_t advParams2 = {
+  .eventProps =   GAP_ADV_PROP_LEGACY,
+  .primIntMin =   160,
+  .primIntMax =   160,
+  .primChanMap =  GAP_ADV_CHAN_ALL,
+  .peerAddrType = PEER_ADDRTYPE_PUBLIC_OR_PUBLIC_ID,
+  .peerAddr =     { 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa },
+  .filterPolicy = GAP_ADV_WL_POLICY_ANY_REQ,
+  .txPower =      GAP_ADV_TX_POWER_NO_PREFERENCE,
+  .primPhy =      GAP_ADV_PRIM_PHY_1_MBPS,
+  .secPhy =       GAP_ADV_SEC_PHY_1_MBPS,
+  .sid =          0
+};
+
 // Advertisement data
 uint8_t advData1[] =
 {
@@ -159,7 +174,7 @@ uint8_t advData2[] =
    //Company Identifier
 
 
-   //current time value
+   //current time value in hex format
    0x00, //first two digits
    0x00, //next two digits
    0x00, //next two digits
