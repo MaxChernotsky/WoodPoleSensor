@@ -1154,7 +1154,7 @@ static void multi_role_advertInit(void)
 
 
     // Create Advertisement set #2 and assign handle
-    GapAdv_create(&multi_role_advCB, &advParams1, &advHandleTime);
+    GapAdv_create(&multi_role_advCB, &advParams2, &advHandleTime);
 
     // Load advertising data for set #2 that is statically allocated by the app
     GapAdv_loadByHandle(advHandleTime, GAP_ADV_DATA_TYPE_ADV, sizeof(advData2), advData2);
