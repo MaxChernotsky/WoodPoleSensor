@@ -613,8 +613,7 @@ static void multi_role_init(void)
 
   BLE_LOG_INT_TIME(0, BLE_LOG_MODULE_APP, "APP : ---- call GAP_DeviceInit", GAP_PROFILE_PERIPHERAL | GAP_PROFILE_CENTRAL);
   //Initialize GAP layer for Peripheral and Central role and register to receive GAP events
-  GAP_DeviceInit(GAP_PROFILE_PERIPHERAL | GAP_PROFILE_CENTRAL, selfEntity,
-                 addrMode, &pRandomAddress);
+  GAP_DeviceInit(GAP_PROFILE_PERIPHERAL | GAP_PROFILE_CENTRAL, selfEntity, addrMode, &pRandomAddress);
 
   Seconds_set(1598997542);
 
@@ -1126,7 +1125,7 @@ static void multi_role_advertInit(void)
   // http://software-dl.ti.com/lprf/ble5stack-latest/
 
 
-  BLE_LOG_INT_INT(0, BLE_LOG_MODULE_APP, "APP : ---- call GapAdv_create set=%d,%d\n", 1, 0);
+  BLE_LOG_INT_INT(0, BLE_LOG_MODULE_APP, "APP : ---- call GapAdv_create set=%d,%d\n", 0, 0);
   // Create Advertisement set #1 and assign handle
   GapAdv_create(&multi_role_advCB, &advParams1,
                 &advHandle);
@@ -1150,16 +1149,14 @@ static void multi_role_advertInit(void)
 
   //setup advertisement set 2
 
-    BLE_LOG_INT_INT(0, BLE_LOG_MODULE_APP, "APP : ---- call GapAdv_create set=%d,%d\n", 2, 0);
+    BLE_LOG_INT_INT(0, BLE_LOG_MODULE_APP, "APP : ---- call GapAdv_create set=%d,%d\n", 1, 0);
 
 
     // Create Advertisement set #2 and assign handle
-    GapAdv_create(&multi_role_advCB, &advParams2, &advHandleTime);
+    status = GapAdv_create(&multi_role_advCB, &advParams1, &advHandleTime);
 
     // Load advertising data for set #2 that is statically allocated by the app
-    GapAdv_loadByHandle(advHandleTime, GAP_ADV_DATA_TYPE_ADV, sizeof(advData2), advData2);
-
-
+    status = GapAdv_loadByHandle(advHandleTime, GAP_ADV_DATA_TYPE_ADV, sizeof(advData1), advData1);
 
     // Set event mask for set #2
     GapAdv_setEventMask(advHandleTime,
@@ -1181,6 +1178,7 @@ static void multi_role_advertInit(void)
   {
     mrIsAdvertising = false;
     //Display_printf(dispHandle, MR_ROW_ADVERTIS, 0, "Error: Failed to Start Advertising!");
+    Log_error0("Failed to start Advertising");
   }
 
   if (addrMode > ADDRMODE_RANDOM)
