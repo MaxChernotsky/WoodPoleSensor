@@ -81,8 +81,8 @@ GapAdv_params_t advParams1 = {
   .peerAddr =     { 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa },
   .filterPolicy = GAP_ADV_WL_POLICY_ANY_REQ,
   .txPower =      GAP_ADV_TX_POWER_NO_PREFERENCE,
-  .primPhy =      GAP_ADV_PRIM_PHY_1_MBPS,
-  .secPhy =       GAP_ADV_SEC_PHY_1_MBPS,
+  .primPhy =      GAP_ADV_PRIM_PHY_CODED_S2,
+  .secPhy =       GAP_ADV_PRIM_PHY_CODED_S2,
   .sid =          0
 };
 

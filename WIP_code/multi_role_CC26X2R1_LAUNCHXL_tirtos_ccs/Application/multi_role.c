@@ -170,11 +170,20 @@ uint32_t ntimePostAdv = 0;
 uint32_t timeDiff = 0;
 uint32_t ntimeDiff = 0;
 
+//boolean to specify if advertising the time
 bool timeServer = false;
 
+//struct to hold the current time
+// ts.secs = seconds elapsed since 1970
+// ts.nsecs = nano seconds within the second based on RTC
 Seconds_Time ts;
 
+//global variable to count the number of iterations in detemrining the accruate time difference
 int count = 0;
+
+//variable to be used to isolate the parameters needed to set the time accurately
+bool timeClient = false;
+
 /*********************************************************************
 * TYPEDEFS
 */
@@ -613,7 +622,8 @@ static void multi_role_init(void)
 
   BLE_LOG_INT_TIME(0, BLE_LOG_MODULE_APP, "APP : ---- call GAP_DeviceInit", GAP_PROFILE_PERIPHERAL | GAP_PROFILE_CENTRAL);
   //Initialize GAP layer for Peripheral and Central role and register to receive GAP events
-  GAP_DeviceInit(GAP_PROFILE_PERIPHERAL | GAP_PROFILE_CENTRAL, selfEntity, addrMode, &pRandomAddress);
+  GAP_DeviceInit(GAP_PROFILE_PERIPHERAL | GAP_PROFILE_CENTRAL, selfEntity,
+                 addrMode, &pRandomAddress);
 
   Seconds_set(1598997542);
 
@@ -1125,7 +1135,7 @@ static void multi_role_advertInit(void)
   // http://software-dl.ti.com/lprf/ble5stack-latest/
 
 
-  BLE_LOG_INT_INT(0, BLE_LOG_MODULE_APP, "APP : ---- call GapAdv_create set=%d,%d\n", 0, 0);
+  BLE_LOG_INT_INT(0, BLE_LOG_MODULE_APP, "APP : ---- call GapAdv_create set=%d,%d\n", 1, 0);
   // Create Advertisement set #1 and assign handle
   GapAdv_create(&multi_role_advCB, &advParams1,
                 &advHandle);
@@ -1149,14 +1159,14 @@ static void multi_role_advertInit(void)
 
   //setup advertisement set 2
 
-    BLE_LOG_INT_INT(0, BLE_LOG_MODULE_APP, "APP : ---- call GapAdv_create set=%d,%d\n", 1, 0);
+    BLE_LOG_INT_INT(0, BLE_LOG_MODULE_APP, "APP : ---- call GapAdv_create set=%d,%d\n", 2, 0);
 
 
     // Create Advertisement set #2 and assign handle
     status = GapAdv_create(&multi_role_advCB, &advParams1, &advHandleTime);
 
     // Load advertising data for set #2 that is statically allocated by the app
-    status = GapAdv_loadByHandle(advHandleTime, GAP_ADV_DATA_TYPE_ADV, sizeof(advData1), advData1);
+    status = GapAdv_loadByHandle(advHandleTime, GAP_ADV_DATA_TYPE_ADV, sizeof(advData2), advData2);
 
     // Set event mask for set #2
     GapAdv_setEventMask(advHandleTime,
@@ -1178,7 +1188,6 @@ static void multi_role_advertInit(void)
   {
     mrIsAdvertising = false;
     //Display_printf(dispHandle, MR_ROW_ADVERTIS, 0, "Error: Failed to Start Advertising!");
-    Log_error0("Failed to start Advertising");
   }
 
   if (addrMode > ADDRMODE_RANDOM)
@@ -1383,7 +1392,8 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
     case MR_EVT_ADV_REPORT:
     {
       GapScan_Evt_AdvRpt_t* pAdvRpt = (GapScan_Evt_AdvRpt_t*) (pMsg->pData);
-      //Log_info0("In Advertising Report...");
+      Log_info0("In Advertising Report...");
+
 
 
 
@@ -1409,8 +1419,6 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
 
 
               Log_info1("All Data Printout: %s", (uintptr_t)outputData);
-              //printf("received advert: %s \n", outputData);
-              //printf("manudataonly advert: %s \n", manuDataOnly);
 
 
               //adjust data to print in uartLog
@@ -1497,13 +1505,28 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
   #endif // DEFAULT_DEV_DISC_BY_SVC_UUID
 
 
-        }
+        }//end for loop
 
 
-      }
+      }//end pAddrs if statement
 
 
       Log_info1("Scanning stopped: numReport = %d", numReport);
+
+
+
+
+      //will run when timeClient is needed
+      //will isolate the time and delay from the advertData
+      if (timeClient){
+
+          Log_info0("Isolating received timestamp:");
+
+      }//end for loop for timeClient
+
+
+
+
 
       break;
     }
@@ -2074,6 +2097,7 @@ static void multi_role_handleKeys(uint8_t keys)
         //multi_role_serviceDiscovery(0);
 
         foundCorrectDev = 0;
+        timeClient = true;
         multi_role_doDiscoverDevices();
 
         //left button handler
@@ -3077,6 +3101,7 @@ static void multi_role_timeSend(void) {
     char tempHexnTime[8];
 
     int increment = 0;
+    count = 0;
 
 
     sprintf(tempHexTime, "%X", timePreAdv);
@@ -3107,7 +3132,7 @@ static void multi_role_timeSend(void) {
     Log_info1("Current Time: %d", timePreAdv);
     Log_info1("nanoseconds: %d", ntimePreAdv);
     timeServer = true;
-    GapAdv_enable(advHandleTime, GAP_ADV_ENABLE_OPTIONS_USE_MAX_EVENTS, 100);
+    GapAdv_enable(advHandleTime, GAP_ADV_ENABLE_OPTIONS_USE_MAX, 0);
 
 
 }//end multi_role_timeSend function

@@ -131,7 +131,7 @@ extern void setBondManagerParameters();
 #define DEFAULT_SCAN_WINDOW                     400
 
 // Default scan duration in 10 ms
-#define DEFAULT_SCAN_DURATION                   100
+#define DEFAULT_SCAN_DURATION                   200
 
 // Advertising report fields to keep in the list
 #define ADV_RPT_FIELDS                          (SCAN_ADVRPT_FLD_ADDRESS | SCAN_ADVRPT_FLD_ADDRTYPE)
