@@ -225,7 +225,7 @@ typedef struct
   uint8_t txPower;
   uint8_t rssi;
   uint16_t dataLen;
-  char* manuDataOnly;
+  char* manuData[30];
 } scanRec_t;
 
 // Container to store information from clock expiration using a flexible array
@@ -405,7 +405,7 @@ static void multi_role_performPeriodicTask(void);
 static void multi_role_clockHandler(UArg arg);
 static uint8_t multi_role_clearConnListEntry(uint16_t connHandle);
 #if (DEFAULT_DEV_DISC_BY_SVC_UUID == TRUE)
-static void multi_role_addScanInfo(uint8_t *pAddr, uint8_t addrType, uint8_t txPower, uint8_t rssi, uint16_t dataLen, char* manuDataOnly);
+static void multi_role_addScanInfo(uint8_t *pAddr, uint8_t addrType, uint8_t txPower, uint8_t rssi, uint16_t dataLen, char *receivedData);
 static bool multi_role_findSvcUuid(uint16_t uuid, uint8_t *pData,
                                       uint16_t dataLen);
 #endif // DEFAULT_DEV_DISC_BY_SVC_UUID
@@ -425,7 +425,7 @@ static void multi_role_updateRPA(void);
 static char * util_arrtohex(uint8_t const *src, uint8_t src_len, uint8_t *dst, uint8_t dst_len, uint8_t reverse);
 
 static void multi_role_timeSend(void);
-
+static void multi_role_timeIsolation(void);
 /*********************************************************************
  * EXTERN FUNCTIONS
 */
@@ -1398,41 +1398,37 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
 
 
 #if (DEFAULT_DEV_DISC_BY_SVC_UUID == TRUE)
-      if (multi_role_findSvcUuid(SIMPLEPROFILE_SERV_UUID,
-                                 pAdvRpt->pData, pAdvRpt->dataLen))
+      if (multi_role_findSvcUuid(SIMPLEPROFILE_SERV_UUID, pAdvRpt->pData, pAdvRpt->dataLen))
       {
           Log_info0("");
           Log_info0(ANSI_COLOR(FG_GREEN) "Showing Devices with 0xFFF0:" ANSI_COLOR(ATTR_RESET));
 
+          //receive incoming advertDataReport and save as char array
+          const char* outputData = Util_convertBytes2Str(pAdvRpt->pData, pAdvRpt->dataLen);
 
-        //receive incoming advertDataReport and save as char array
-              const char* outputData = Util_convertBytes2Str(pAdvRpt->pData, pAdvRpt->dataLen);
+          //copy all the data in a new array to be modified later on
+          char allData[60];
+          strcpy(allData, outputData);
+
+          //save only manufacturer (custom) data
+          char manuDataOnly[25];
+          strncpy(manuDataOnly, allData+33, sizeof(allData));
+
+          Log_info1("All Data Printout: %s", (uintptr_t)outputData);
+
+          //adjust data to print in uartLog
+
+          memcpy(manuToPrint, manuDataOnly, sizeof(manuDataOnly)+1);
+          manuToPrint[sizeof(manuDataOnly)+1] = '\0';
+          //Log_info0("");
+
+          //test print
+          //char* test;
+          //memcpy(test, manuDataOnly, sizeof(manuDataOnly)+1);
 
 
-              //copy all the data in a new array to be modified later on
-              char allData[60];
-              strcpy(allData, outputData);
-
-              //save only manufacturer (custom) data
-              char manuDataOnly[25];
-              strncpy(manuDataOnly, allData+33, sizeof(allData));
-
-
-              Log_info1("All Data Printout: %s", (uintptr_t)outputData);
-
-
-              //adjust data to print in uartLog
-
-              memcpy(manuToPrint, manuDataOnly, sizeof(manuDataOnly)+1);
-              manuToPrint[sizeof(manuDataOnly)+1] = '\0';
-              //Log_info0("");
-
-              //test print
-              //char* test;
-              //memcpy(test, manuDataOnly, sizeof(manuDataOnly)+1);
-
-              multi_role_addScanInfo(pAdvRpt->addr, pAdvRpt->addrType, pAdvRpt->txPower, pAdvRpt->rssi, pAdvRpt->dataLen, manuDataOnly);
-              Log_info1("Received AdvertData: " ANSI_COLOR(FG_GREEN) "%s" ANSI_COLOR(ATTR_RESET),(uintptr_t)manuToPrint);
+          multi_role_addScanInfo(pAdvRpt->addr, pAdvRpt->addrType, pAdvRpt->txPower, pAdvRpt->rssi, pAdvRpt->dataLen, &manuToPrint);
+          Log_info1("Received AdvertData: " ANSI_COLOR(FG_GREEN) "%s" ANSI_COLOR(ATTR_RESET),(uintptr_t)manuToPrint);
 
 
 
@@ -1521,6 +1517,7 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
       if (timeClient){
 
           Log_info0("Isolating received timestamp:");
+          multi_role_timeIsolation();
 
       }//end for loop for timeClient
 
@@ -1789,7 +1786,7 @@ static bool multi_role_findSvcUuid(uint16_t uuid, uint8_t *pData,
  *
  * @return  none
  */
-static void multi_role_addScanInfo(uint8_t *pAddr, uint8_t addrType, uint8_t txPower, uint8_t rssi, uint16_t dataLen, char* manuDataOnly)
+static void multi_role_addScanInfo(uint8_t *pAddr, uint8_t addrType, uint8_t txPower, uint8_t rssi, uint16_t dataLen, char *receivedData)
 {
   uint8_t i;
 
@@ -1811,16 +1808,12 @@ static void multi_role_addScanInfo(uint8_t *pAddr, uint8_t addrType, uint8_t txP
     scanList[numScanRes].txPower = txPower;
     scanList[numScanRes].rssi = rssi;
     scanList[numScanRes].dataLen = dataLen;
-    scanList[numScanRes].manuDataOnly = manuDataOnly;
-
-    //print device info on screen:
-    //Log_info1("Received Device Number: %d", numScanRes+1);
-    //Log_info1("Bluetooth Device Addr: %s", (uintptr_t)Util_convertBdAddr2Str(pAddr));
-    //Log_info2("txPower: %d RSSI: %d", txPower, rssi);
+    //scanList[numScanRes].manuData = receivedData;
+    strcpy(scanList[numScanRes].manuData, receivedData);
 
     Log_info4(ANSI_COLOR(FG_BLUE) "Dev No: %d" ANSI_COLOR(ATTR_RESET)  ", txPower: %d, rssi %d, BT ADDR: " ANSI_COLOR(FG_GREEN) "%s" ANSI_COLOR(ATTR_RESET), numScanRes+1, txPower, rssi, (uintptr_t)Util_convertBdAddr2Str(pAddr));
 
-
+    //Log_info1("Custom Data: %d", receivedData);
 
     //Log_info0(ANSI_COLOR(FG_GREEN) "Devices matching SERV_UUID" ANSI_COLOR(ATTR_RESET))
 
@@ -3136,6 +3129,57 @@ static void multi_role_timeSend(void) {
 
 
 }//end multi_role_timeSend function
+
+
+//function to perfrom timestamp isolation
+
+static void multi_role_timeIsolation(void) {
+
+    //for the initial function assume the device broadcasting the timestamp is the initial device in scanList
+
+    //isolate the manufacture data - look at making this a singular function call
+    //manufacture data is isolated in the scanList structure
+    Log_info1("Received test: %s", scanList[0].manuData);
+
+    char tempData[30];
+    strcpy(tempData, scanList[0].manuData);
+
+    Log_info1("Received tempData: %s", (uintptr_t)tempData);
+    printf("received %s\n", tempData);
+    Util_removeChar(tempData, ':');
+    Log_info1("Removed colon: %s", (uintptr_t)tempData);
+    printf("altered %s\n", tempData);
+
+    //isolate received timestamp
+    char receivedTimestamp [9];
+    char rxDelay[7];
+
+    size_t testvals = 8;
+    size_t rxInt = 6;
+
+
+    strncpy(receivedTimestamp, tempData+4, testvals);
+    //strncpy(rxDelay, tempData+12, sizeof(rxDelay));
+
+    //printf("rxDelay %s\n", rxDelay);
+    printf("receivedTimestamp %s\n", receivedTimestamp);
+
+    Log_info1("Actual time %d",(int)receivedTimestamp);
+    //Log_info1("Actual time %d",(int)rxDelay);
+
+
+
+
+
+
+    //isolate delay
+
+
+
+
+
+
+}//end multi_role_timeIsolation function
 
 
 
