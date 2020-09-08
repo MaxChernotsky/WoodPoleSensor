@@ -1420,17 +1420,9 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
 
           memcpy(manuToPrint, manuDataOnly, sizeof(manuDataOnly)+1);
           manuToPrint[sizeof(manuDataOnly)+1] = '\0';
-          //Log_info0("");
-
-          //test print
-          //char* test;
-          //memcpy(test, manuDataOnly, sizeof(manuDataOnly)+1);
-
 
           multi_role_addScanInfo(pAdvRpt->addr, pAdvRpt->addrType, pAdvRpt->txPower, pAdvRpt->rssi, pAdvRpt->dataLen, &manuToPrint);
           Log_info1("Received AdvertData: " ANSI_COLOR(FG_GREEN) "%s" ANSI_COLOR(ATTR_RESET),(uintptr_t)manuToPrint);
-
-
 
         //Display_printf(dispHandle, MR_ROW_CUR_CONN, 0, "Discovered: %s",Util_convertBdAddr2Str(pAdvRpt->addr));
       }
@@ -3139,43 +3131,45 @@ static void multi_role_timeIsolation(void) {
 
     //isolate the manufacture data - look at making this a singular function call
     //manufacture data is isolated in the scanList structure
-    Log_info1("Received test: %s", scanList[0].manuData);
 
+    //variable to temporary hold the manufacturer data to be edited
     char tempData[30];
     strcpy(tempData, scanList[0].manuData);
 
-    Log_info1("Received tempData: %s", (uintptr_t)tempData);
-    printf("received %s\n", tempData);
+    //remove the colons found in the received data
+    //might be able to remove this command if you take pAdvRpt value
     Util_removeChar(tempData, ':');
     Log_info1("Removed colon: %s", (uintptr_t)tempData);
+
     printf("altered %s\n", tempData);
 
-    //isolate received timestamp
+    //variables to hold the received timestamp and nanosecond delay value
     char receivedTimestamp [9];
     char rxDelay[7];
-
     size_t testvals = 8;
-    size_t rxInt = 6;
 
-
+    //fill the variables accordingly
     strncpy(receivedTimestamp, tempData+4, testvals);
-    //strncpy(rxDelay, tempData+12, sizeof(rxDelay));
+    strncpy(rxDelay, tempData+12, sizeof(rxDelay));
 
     //printf("rxDelay %s\n", rxDelay);
     printf("receivedTimestamp %s\n", receivedTimestamp);
 
-    Log_info1("Actual time %d",(int)receivedTimestamp);
-    //Log_info1("Actual time %d",(int)rxDelay);
+    //convert from the hex value to decimal values
+    uint32_t timeStamp = strtol(receivedTimestamp, 0, 16);
+    long int timeDelay = strtol(rxDelay, 0, 16);
+
+    printf("timestamp value in dec: %d", timeStamp);
+
+    char testPrint[50];
+    memcpy(testPrint, receivedTimestamp, sizeof(receivedTimestamp)+1);
+    testPrint[sizeof(receivedTimestamp)+1] = '\0';
+
+    Log_info1("testPrint %s", (uintptr_t)testPrint);
 
 
-
-
-
-
-    //isolate delay
-
-
-
+    Log_info1("Received TimeStamp %d", timeStamp);
+    Log_info1("Received Delay %d",timeDelay);
 
 
 
