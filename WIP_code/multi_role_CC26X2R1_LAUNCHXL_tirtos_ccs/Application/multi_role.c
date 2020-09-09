@@ -164,15 +164,20 @@ int foundCorrectDev = 0;
 char manuToPrint[100];
 
 //advertisement timeSync variable
-uint32_t timePreAdv = 0;
+uint32_t timePreAdv = 0; //preadv values
 uint32_t ntimePreAdv = 0;
-uint32_t timePostAdv = 0;
+uint32_t timePostAdv = 0; //postadv values
 uint32_t ntimePostAdv = 0;
-uint32_t timeDiff = 0;
+uint32_t timeDiff = 0; //timediff values
 uint32_t ntimeDiff = 0;
 
 //scanning timeSync variable
-
+uint32_t timePreScan = 0; //prescan values
+uint32_t ntimePreScan = 0;
+uint32_t timePostScan = 0; //postscan values
+uint32_t ntimePostScan = 0;
+uint32_t timeDiffScan = 0; //timediff values
+uint32_t ntimeDiffScan = 0;
 
 
 
@@ -1404,6 +1409,13 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
       GapScan_Evt_AdvRpt_t* pAdvRpt = (GapScan_Evt_AdvRpt_t*) (pMsg->pData);
       Log_info0("In Advertising Report...");
 
+      Seconds_getTime(&ts);
+      timePreScan = ts.secs;
+      ntimePreScan = ts.nsecs;
+
+      Log_info1("prescan time: %d", timePreScan);
+      Log_info1("prescan ntime: %d", ntimePreScan);
+
 
 
 
@@ -1438,6 +1450,10 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
           //need to alter this to run only when looking for timeServer advData
           GapScan_disable();
 
+
+
+
+
         //Display_printf(dispHandle, MR_ROW_CUR_CONN, 0, "Discovered: %s",Util_convertBdAddr2Str(pAdvRpt->addr));
       }
 #else // !DEFAULT_DEV_DISC_BY_SVC_UUID
@@ -1456,6 +1472,7 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
     {
         Log_info0("Scanning has started: Discovering...");
         printf("in scan enabled\n");
+
         // Disable everything but "Stop Discovering" on the menu
 
 
@@ -1627,7 +1644,7 @@ static void multi_role_processAdvEvent(mrGapAdvEventData_t *pEventData)
       Log_info1("Adv Set %d Enabled", *(uint8_t *)(pEventData->pBuf));
 
 
-      if ((timeServer==true) && (count<2))
+      if ((timeServer==true) && (count<1))
             {
                 Seconds_getTime(&ts);
                 timePostAdv = ts.secs;
@@ -3171,7 +3188,7 @@ static void multi_role_timeIsolation(void) {
 
     //convert from the hex value to decimal values
     uint32_t timeStamp = strtol(receivedTimestamp, 0, 16);
-    long int timeDelay = strtol(rxDelay, 0, 16);
+    uint32_t timeDelay = strtol(rxDelay, 0, 16);
 
     printf("timestamp value in dec: %d", timeStamp);
 
@@ -3185,17 +3202,34 @@ static void multi_role_timeIsolation(void) {
     Log_info1("Received Delay %d",timeDelay);
 
 
-    //set current time based on received time
+    //get current device time to compare delays
 
     //update Seconds struct containing received time and nsecs
-    ts.secs = timeStamp;
-    ts.nsecs = timeDelay;
+    Seconds_getTime(&ts);
+
+    //save current secs and nsecs
+    timeDiffScan = ts.secs - timePreScan; //timediff values
+    ntimeDiffScan = ts.nsecs - timePreScan;
+
+
+    Log_info1("ntimePostScan %d", ts.nsecs);
+    Log_info1("ntimePreScan %d", ntimePreScan);
+
+    Log_info1("RX secs diff: %d", timeDiffScan);
+    Log_info1("RX nsecs diff: %d", ntimeDiffScan);
+
+    //combined tx and rx delay
+    uint32_t combinedDelays = timeDelay + ntimeDiffScan;
+
+    Log_info1("Combined delay: %d", combinedDelays);
+
+
+    //set current time based on delays
+    ts.secs = timeStamp + timeDiffScan;
+    ts.nsecs = combinedDelays;
     Seconds_setTime(&ts);
 
-
-
     Log_info1("received timeStamp: %d", ts.secs);
-
 
 
 
