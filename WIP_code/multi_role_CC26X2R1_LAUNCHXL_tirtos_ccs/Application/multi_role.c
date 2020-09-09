@@ -163,12 +163,22 @@ int foundCorrectDev = 0;
 
 char manuToPrint[100];
 
+//advertisement timeSync variable
 uint32_t timePreAdv = 0;
 uint32_t ntimePreAdv = 0;
 uint32_t timePostAdv = 0;
 uint32_t ntimePostAdv = 0;
 uint32_t timeDiff = 0;
 uint32_t ntimeDiff = 0;
+
+//scanning timeSync variable
+
+
+
+
+
+
+
 
 //boolean to specify if advertising the time
 bool timeServer = false;
@@ -1423,6 +1433,10 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
 
           multi_role_addScanInfo(pAdvRpt->addr, pAdvRpt->addrType, pAdvRpt->txPower, pAdvRpt->rssi, pAdvRpt->dataLen, &manuToPrint);
           Log_info1("Received AdvertData: " ANSI_COLOR(FG_GREEN) "%s" ANSI_COLOR(ATTR_RESET),(uintptr_t)manuToPrint);
+
+          //disable scan after finding first device
+          //need to alter this to run only when looking for timeServer advData
+          GapScan_disable();
 
         //Display_printf(dispHandle, MR_ROW_CUR_CONN, 0, "Discovered: %s",Util_convertBdAddr2Str(pAdvRpt->addr));
       }
@@ -3117,7 +3131,7 @@ static void multi_role_timeSend(void) {
     Log_info1("Current Time: %d", timePreAdv);
     Log_info1("nanoseconds: %d", ntimePreAdv);
     timeServer = true;
-    GapAdv_enable(advHandleTime, GAP_ADV_ENABLE_OPTIONS_USE_MAX, 0);
+    GapAdv_enable(advHandleTime, GAP_ADV_ENABLE_OPTIONS_USE_MAX_EVENTS, 2);
 
 
 }//end multi_role_timeSend function
@@ -3167,9 +3181,21 @@ static void multi_role_timeIsolation(void) {
 
     Log_info1("testPrint %s", (uintptr_t)testPrint);
 
-
     Log_info1("Received TimeStamp %d", timeStamp);
     Log_info1("Received Delay %d",timeDelay);
+
+
+    //set current time based on received time
+
+    //update Seconds struct containing received time and nsecs
+    ts.secs = timeStamp;
+    ts.nsecs = timeDelay;
+    Seconds_setTime(&ts);
+
+
+
+    Log_info1("received timeStamp: %d", ts.secs);
+
 
 
 
