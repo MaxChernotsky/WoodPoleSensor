@@ -114,6 +114,7 @@ Target Device: cc13x2_26x2
 #define MR_EVT_PERIODIC            11
 #define MR_EVT_READ_RPA            12
 #define MR_EVT_INSUFFICIENT_MEM    13
+#define MR_EVT_TIMESYNC            14
 
 // Internal Events for RTOS application
 #define MR_ICALL_EVT                         ICALL_MSG_EVENT_ID // Event_Id_31
@@ -181,12 +182,24 @@ uint32_t ntimeDiffScan = 0;
 
 
 
+//TX vals
+uint32_t ticksPreAdv = 0; // divide by 10 to get milliseconds
+uint32_t ticksPostAdv = 0;
+
+
+//RX vals
+uint32_t ticksPreScan = 0;
+uint32_t ticksPostScan = 0;
+
 
 
 
 
 //boolean to specify if advertising the time
 bool timeServer = false;
+
+//boolean to specify if advertising the ticks
+bool tickServer = false;
 
 //struct to hold the current time
 // ts.secs = seconds elapsed since 1970
@@ -321,6 +334,9 @@ static Clock_Struct clkPeriodic;
 // Clock instance for RPA read events.
 static Clock_Struct clkRpaRead;
 
+//clock instance for timesync events
+static Clock_Struct clkTimeSync;
+
 // Memory to pass periodic event to clock handler
 mrClockEventData_t periodicUpdateData =
 {
@@ -331,6 +347,11 @@ mrClockEventData_t periodicUpdateData =
 mrClockEventData_t argRpaRead =
 {
   .event = MR_EVT_READ_RPA
+};
+
+mrClockEventData_t timeSyncClk =
+{
+ .event = MR_EVT_TIMESYNC
 };
 
 // Queue object used for app messages
@@ -379,6 +400,7 @@ static mrConnRec_t connList[MAX_NUM_BLE_CONNS];
 // Advertising handles
 static uint8 advHandle;
 static uint8 advHandleTime;
+static uint8 advHandleTicks;
 
 static bool mrIsAdvertising = false;
 // Address mode
@@ -441,6 +463,10 @@ static char * util_arrtohex(uint8_t const *src, uint8_t src_len, uint8_t *dst, u
 
 static void multi_role_timeSend(void);
 static void multi_role_timeIsolation(void);
+
+static void multi_role_tickSend(void);
+static void multi_role_tickIsolation(void);
+
 /*********************************************************************
  * EXTERN FUNCTIONS
 */
@@ -542,6 +568,7 @@ static void multi_role_init(void)
 
 
 
+  //initialise Clocks
 
   // Create an RTOS queue for message from profile to be sent to app.
   appMsgQueue = Util_constructQueue(&appMsg);
@@ -550,6 +577,9 @@ static void multi_role_init(void)
   Util_constructClock(&clkPeriodic, multi_role_clockHandler,
                       MR_PERIODIC_EVT_PERIOD, 0, false,
                       (UArg)&periodicUpdateData);
+
+  //create one-shot clock for timesync based on call from advert data
+  Util_constructClock(&clkTimeSync, multi_role_clockHandler, 1500, 0, false, (UArg)&timeSyncClk);
 
   // Init key debouncer
   Board_initKeys(multi_role_keyChangeHandler);
@@ -1193,6 +1223,27 @@ static void multi_role_advertInit(void)
     // Enable legacy advertising for set #2
     status = GapAdv_enable(advHandleTime, GAP_ADV_ENABLE_OPTIONS_USE_MAX , 0);
 
+    BLE_LOG_INT_INT(0, BLE_LOG_MODULE_APP, "APP : ---- call GapAdv_create set=%d,%d\n", 3, 0);
+
+
+    // Create Advertisement set #2 and assign handle
+    status = GapAdv_create(&multi_role_advCB, &advParams1, &advHandleTicks);
+
+    // Load advertising data for set #2 that is statically allocated by the app
+    status = GapAdv_loadByHandle(advHandleTicks, GAP_ADV_DATA_TYPE_ADV, sizeof(advData3), advData3);
+
+    // Set event mask for set #2
+    GapAdv_setEventMask(advHandleTicks,
+                        GAP_ADV_EVT_MASK_START_AFTER_ENABLE |
+                        GAP_ADV_EVT_MASK_END_AFTER_DISABLE |
+                        GAP_ADV_EVT_MASK_SET_TERMINATED);
+
+    BLE_LOG_INT_TIME(0, BLE_LOG_MODULE_APP, "APP : ---- GapAdv_enable", 0);
+    // Enable legacy advertising for set #2
+    status = GapAdv_enable(advHandleTicks, GAP_ADV_ENABLE_OPTIONS_USE_MAX , 0);
+
+
+
     Log_info0("Initialise Advertising...");
 
 
@@ -1413,8 +1464,14 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
       timePreScan = ts.secs;
       ntimePreScan = ts.nsecs;
 
+      ticksPreScan = Clock_getTicks();
+      Log_info1("current clock ticks: %d", ticksPreScan);
+
       Log_info1("prescan time: %d", timePreScan);
       Log_info1("prescan ntime: %d", ntimePreScan);
+
+
+
 
 
 
@@ -1540,7 +1597,7 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
       if (timeClient){
 
           Log_info0("Isolating received timestamp:");
-          multi_role_timeIsolation();
+          multi_role_tickIsolation();
 
       }//end for loop for timeClient
 
@@ -1608,6 +1665,13 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
       break;
     }
 
+    case MR_EVT_TIMESYNC:
+    {
+        //when the timesync event has been called, print to screen
+        Log_info0("TimeSync successfully called");
+        break;
+    }
+
     default:
       // Do nothing.
       break;
@@ -1642,6 +1706,54 @@ static void multi_role_processAdvEvent(mrGapAdvEventData_t *pEventData)
       //Log_info1("Adv set %d Enabled", (uintptr_t)(uint8_t *)pEventData->pBuf);
       //Display_printf(dispHandle, MR_ROW_ADVERTIS, 0, "Adv Set %d Enabled",*(uint8_t *)(pEventData->pBuf));
       Log_info1("Adv Set %d Enabled", *(uint8_t *)(pEventData->pBuf));
+
+
+
+      if ((tickServer==true) && (count<1))
+      {
+
+          ticksPostAdv = Clock_getTicks();
+          Log_info1("ticksPostAdv %d", ticksPostAdv);
+
+          uint32_t ticksDiffAdv = ticksPostAdv - ticksPreAdv;
+          //Log_info1("tickDiffAdv %d", ticksDiffAdv);
+
+          //convert diff into hex
+
+          char tempTickHexDelay [4];
+
+          sprintf(tempTickHexDelay, "%X", ticksDiffAdv);
+
+          printf("timeTickHexDelay %s\n", tempTickHexDelay);
+
+          int increment = 0;
+
+
+          GapAdv_prepareLoadByHandle(advHandleTicks, GAP_ADV_FREE_OPTION_DONT_FREE);
+          size_t tempSize = 2;
+
+          //add each value to the advData
+          for (int i = 13; i < 15; i++) {
+              char tempChar[2];
+              long int tempLong = 0;
+              strncpy(tempChar, tempTickHexDelay + increment, tempSize);
+              Log_info1("tempChar %s", (uintptr_t)tempChar);
+
+              tempLong = strtol(tempChar, 0, 16);
+              Log_info1("tempLong %d", tempLong);
+              char toAdvData = tempLong;
+
+              advData3[i] = toAdvData;
+              increment = increment+2;
+          }//end for loop
+
+          GapAdv_loadByHandle(advHandleTicks, GAP_ADV_DATA_TYPE_ADV, sizeof(advData3), advData3);
+          //timeServer=false;
+          Log_info2("Count[%d]: Diff: %d", count, ticksDiffAdv);
+          count = count+1;
+
+      }//end if for tickServer isolation
+
 
 
       if ((timeServer==true) && (count<1))
@@ -2066,6 +2178,11 @@ static void multi_role_clockHandler(UArg arg)
     // Send message to app
     multi_role_enqueueMsg(MR_EVT_SEND_PARAM_UPDATE, pData);
   }
+  else if (pData->event == MR_EVT_TIMESYNC)
+  {
+      //send message to app
+      multi_role_enqueueMsg(MR_EVT_TIMESYNC, NULL);
+  }
 }
 
 /*********************************************************************
@@ -2127,7 +2244,7 @@ static void multi_role_handleKeys(uint8_t keys)
     {
       //right button handler
       //multi_role_doConnect(0);
-        multi_role_timeSend();
+        multi_role_tickSend();
 
     }
   }
@@ -3119,7 +3236,6 @@ static void multi_role_timeSend(void) {
     int increment = 0;
     count = 0;
 
-
     sprintf(tempHexTime, "%X", timePreAdv);
     sprintf(tempHexnTime, "%X", ntimePreAdv);
 
@@ -3153,6 +3269,27 @@ static void multi_role_timeSend(void) {
 
 }//end multi_role_timeSend function
 
+static void multi_role_tickSend (void){
+    //function to be called when ticks need to be sent
+
+    //disable adv -> start clock -> get ticks -> start adv
+
+    GapAdv_disable(advHandle);
+    GapAdv_disable(advHandleTime);
+    GapAdv_disable(advHandleTicks);
+
+
+    Util_startClock(&clkTimeSync);
+    ticksPreAdv = Clock_getTicks();
+    Log_info1("ticksPreAdv %d", ticksPreAdv);
+
+    tickServer = true;
+    GapAdv_enable(advHandleTicks, GAP_ADV_ENABLE_OPTIONS_USE_MAX_EVENTS, 1);
+    count = 0;
+
+
+}//end multi_role_tickSend
+
 
 //function to perfrom timestamp isolation
 
@@ -3162,6 +3299,8 @@ static void multi_role_timeIsolation(void) {
 
     //isolate the manufacture data - look at making this a singular function call
     //manufacture data is isolated in the scanList structure
+
+    //Util_startClock(&clkTimeSync);
 
     //variable to temporary hold the manufacturer data to be edited
     char tempData[30];
@@ -3223,7 +3362,6 @@ static void multi_role_timeIsolation(void) {
 
     Log_info1("Combined delay: %d", combinedDelays);
 
-
     //set current time based on delays
     ts.secs = timeStamp + timeDiffScan;
     ts.nsecs = combinedDelays;
@@ -3231,10 +3369,53 @@ static void multi_role_timeIsolation(void) {
 
     Log_info1("received timeStamp: %d", ts.secs);
 
-
-
 }//end multi_role_timeIsolation function
 
+
+static void multi_role_tickIsolation (void) {
+    //new function to call when doing tick isolation for syncing
+
+    //need to isolate the incoming tick tx delay
+
+    //variable to temporary hold the manufacturer data to be edited
+    char tempData[10];
+    strcpy(tempData, scanList[0].manuData);
+
+    //remove the colon and '0' found in the received data
+    Util_removeChar(tempData, ':');
+    Util_removeChar(tempData, '0');
+    Log_info1("Removed colon: %s", (uintptr_t)tempData);
+
+    //isolate the txDelay value
+    char txDelayChar[4];
+    strncpy(txDelayChar, tempData+3, sizeof(txDelayChar));
+
+    uint32_t txDelay = strtol(txDelayChar, 0, 16);
+
+    Log_info1("txDelay: %d", txDelay);
+
+
+
+    //tick RX delay calculation
+    ticksPostScan = Clock_getTicks();
+    uint32_t ticksDiffScan = ticksPostScan - ticksPreScan;
+
+    uint32_t combinedTickDelay = txDelay + ticksDiffScan;
+
+    Log_info1("current clock ticks: %d", ticksPostScan);
+    Log_info1("RX tick diff: %d", ticksDiffScan);
+
+
+    //start clock
+    Log_info0("Starting Clocks...");
+
+
+    uint32_t startingTimeClock = 1500-combinedTickDelay;
+    Log_info1("Adjusted clock time delay: %d", startingTimeClock);
+
+    Util_restartClock(&clkTimeSync, startingTimeClock);
+
+}//end multi_role_tickIsolation
 
 
 /*********************************************************************

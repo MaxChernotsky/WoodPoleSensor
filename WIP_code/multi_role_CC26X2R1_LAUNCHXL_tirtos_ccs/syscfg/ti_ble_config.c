@@ -155,6 +155,34 @@ uint8_t advData2[] =
    0xAA
 };
 
+// Advertisement data set 3
+// adv set used for tick send
+uint8_t advData3[] =
+{
+   0x03,
+   GAP_ADTYPE_LOCAL_NAME_SHORT,
+   'P',
+   'S',
+
+   0x02,
+   GAP_ADTYPE_FLAGS,
+   GAP_ADTYPE_FLAGS_BREDR_NOT_SUPPORTED | GAP_ADTYPE_FLAGS_GENERAL,
+
+   0x03,
+   GAP_ADTYPE_16BIT_MORE,
+   // More 16-bit - UUID 0
+   LO_UINT16(0xfff0),
+   HI_UINT16(0xfff0),
+
+   0x03,
+   GAP_ADTYPE_MANUFACTURER_SPECIFIC,
+   //Company Identifier
+
+   //tick delay
+   0x00, //singular bit needed to determine the delay required in the ticks
+   0x00
+};
+
 
 // Scan Response Data
 uint8_t scanResData1[] =
