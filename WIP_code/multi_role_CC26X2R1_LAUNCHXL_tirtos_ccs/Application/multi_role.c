@@ -115,6 +115,7 @@ Target Device: cc13x2_26x2
 #define MR_EVT_READ_RPA            12
 #define MR_EVT_INSUFFICIENT_MEM    13
 #define MR_EVT_TIMESYNC            14
+#define MR_EVT_SECONDSSET          15
 
 // Internal Events for RTOS application
 #define MR_ICALL_EVT                         ICALL_MSG_EVENT_ID // Event_Id_31
@@ -337,6 +338,8 @@ static Clock_Struct clkRpaRead;
 //clock instance for timesync events
 static Clock_Struct clkTimeSync;
 
+static Clock_Struct clkSecondsSet;
+
 // Memory to pass periodic event to clock handler
 mrClockEventData_t periodicUpdateData =
 {
@@ -352,6 +355,11 @@ mrClockEventData_t argRpaRead =
 mrClockEventData_t timeSyncClk =
 {
  .event = MR_EVT_TIMESYNC
+};
+
+mrClockEventData_t secondssetClk =
+{
+ .event = MR_EVT_SECONDSSET
 };
 
 // Queue object used for app messages
@@ -580,6 +588,7 @@ static void multi_role_init(void)
 
   //create one-shot clock for timesync based on call from advert data
   Util_constructClock(&clkTimeSync, multi_role_clockHandler, 1500, 0, false, (UArg)&timeSyncClk);
+  Util_constructClock(&clkSecondsSet, multi_role_clockHandler, 1500, 0, false, (UArg)&secondssetClk);
 
   // Init key debouncer
   Board_initKeys(multi_role_keyChangeHandler);
@@ -1669,7 +1678,17 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
     {
         //when the timesync event has been called, print to screen
         Log_info0("TimeSync successfully called");
+        Seconds_set(1599767013);
+        Util_startClock(&clkSecondsSet);
         break;
+    }
+
+    case MR_EVT_SECONDSSET:
+    {
+        Seconds_getTime(&ts);
+        Log_info2("Seconds: %d, nSecs: %d", ts.secs, ts.nsecs);
+
+     break;
     }
 
     default:
@@ -2183,6 +2202,11 @@ static void multi_role_clockHandler(UArg arg)
       //send message to app
       multi_role_enqueueMsg(MR_EVT_TIMESYNC, NULL);
   }
+  else if (pData->event == MR_EVT_SECONDSSET)
+  {
+      //send message to app
+      multi_role_enqueueMsg(MR_EVT_SECONDSSET, NULL);
+   }
 }
 
 /*********************************************************************
