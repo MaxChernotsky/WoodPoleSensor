@@ -1,0 +1,875 @@
+[
+  {
+    "_id": "BV3d_RuwSDhR64",
+    "allowPartialDownload": false,
+    "categories": [
+      [
+        "Software"
+      ]
+    ],
+    "dependencies": [
+      {
+        "refId": "xdctools",
+        "require": "optional",
+        "semver": "3.61.1",
+        "version": "3.61.01.25",
+        "versionRange": "3.61.01.25"
+      },
+      {
+        "refId": "sysconfig",
+        "require": "optional",
+        "semver": "1.4.0",
+        "version": "1.4.0",
+        "versionRange": "1.4.0"
+      },
+      {
+        "refId": "arm.gnu",
+        "require": "optional",
+        "semver": "9.2.1",
+        "version": "9.2.1",
+        "versionRange": "9.2.1"
+      },
+      {
+        "refId": "com.ti.SIMPLELINK_ACADEMY_CC13X2_26X2_SDK",
+        "require": "optional",
+        "semver": "4.20.3",
+        "version": "4.20.03.00",
+        "versionRange": "4.20.03.00"
+      }
+    ],
+    "description": "<p>The SimpleLink™ CC13x2_26x2 Software Development Kit (SDK) delivers components that enable engineers to develop applications on the Texas Instruments SimpleLink CC13x2 and CC26x2 family of wireless microcontroller (MCUs). This software toolkit provides a cohesive and consistent software experience for all SimpleLink CC13x2 and CC26x2 wireless MCU users by packaging essential software components, such as a Bluetooth® low energy (BLE) protocol stack supporting Bluetooth 5, Thread 1.1 networking stack based on OpenThread, ZigBee 3.0 compliant protocol suite, RF-Proprietary examples, TI's 15.4 Stack as well as the TI-RTOS kernel and TI Drivers in one easy-to-use software package along with example applications and documentation. In addition, the Dynamic Multi-Protocol Manager (DMM) software component enables multiprotocol development on a single SimpleLink wireless MCU through time division multiplexing. The SimpleLink MCU portfolio offers a single development environment that delivers flexible hardware, software and tool options for customers developing wired and wireless applications. With 100 percent code reuse across host MCUs, Wi-Fi™, Bluetooth low energy, Sub-1GHz devices and more, choose the MCU or connectivity standard that fits your design. A one-time investment with the SimpleLink software development kit (SDK) allows you to reuse often, opening the door to create unlimited applications. For more information, visit <a href=\"http://www.ti.com/simplelink\">http://www.ti.com/simplelink</a>.</p>",
+    "devices": [
+      "CC13X2",
+      "CC26X2",
+      "CC1312R1F3",
+      "CC1352R1F3",
+      "CC2652R1F"
+    ],
+    "devicesVariants": [
+      "CC1312R1F3",
+      "CC1352R1F3",
+      "CC2652R1F"
+    ],
+    "devtools": [
+      "CC26x2R LaunchPad",
+      "Code Composer Studio (CCS)",
+      "UniFlash",
+      "PinMux",
+      "GUI Composer",
+      "SEGGER J-Link",
+      "IAR I-JET",
+      "IAR Embedded Workbench for ARM",
+      "ELPROTRONIC",
+      "SEGGER",
+      "ELNEC",
+      "BPM Microsystems",
+      "DATA IO",
+      "Sensor Controller Studio",
+      "SmartRF Studio",
+      "SmartRF Packet Sniffer 2",
+      "Open On-Chip Debugger (OpenOCD) for SimpleLink™ Connected MCUs",
+      "XDS100v2 JTAG Debug Probe (14-pin TI version)",
+      "XDS100v2 JTAG Debug Probe (20-pin TI version)",
+      "XDS100v2 JTAG Debug Probe (ARM version)",
+      "XDS110 Debug Probe",
+      "XDS200 USB Debug Probe",
+      "XDS560v2 System Trace USB Debug Probe",
+      "CC1312R LaunchPad",
+      "CC1352R LaunchPad",
+      "ULP Sense BoosterPack"
+    ],
+    "devtools_category": [
+      "CC26x2R LaunchPad",
+      "Code Composer Studio (CCS)",
+      "UniFlash",
+      "PinMux",
+      "GUI Composer",
+      "SEGGER J-Link",
+      "IAR I-JET",
+      "IAR Embedded Workbench for ARM",
+      "ELPROTRONIC",
+      "SEGGER",
+      "ELNEC",
+      "BPM Microsystems",
+      "DATA IO",
+      "Sensor Controller Studio",
+      "SmartRF Studio",
+      "SmartRF Packet Sniffer 2",
+      "Open On-Chip Debugger (OpenOCD) for SimpleLink™ Connected MCUs",
+      "XDS100v2 JTAG Debug Probe (14-pin TI version)",
+      "XDS100v2 JTAG Debug Probe (20-pin TI version)",
+      "XDS100v2 JTAG Debug Probe (ARM version)",
+      "XDS110 Debug Probe",
+      "XDS200 USB Debug Probe",
+      "XDS560v2 System Trace USB Debug Probe",
+      "CC1312R LaunchPad",
+      "CC1352R LaunchPad",
+      "ULP Sense BoosterPack"
+    ],
+    "fullPaths": [
+      [
+        "Software"
+      ]
+    ],
+    "fullPathsPublicIds": [
+      "AOSQDVXMohlV5LElLx5wxA"
+    ],
+    "id": "com.ti.SIMPLELINK_CC13X2_26X2_SDK",
+    "image": "/Users/maxchernotsky/ti//simplelink_cc13x2_26x2_sdk_4_20_01_04/.metadata/.tirex/cc13x2_26x2-tirex.png",
+    "includedFiles": [
+      "."
+    ],
+    "includedFilesForDownload": [
+      "simplelink_cc13x2_26x2_sdk_4_20_01_04"
+    ],
+    "includedResources": [
+      {
+        "package": "com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.01.04"
+      }
+    ],
+    "license": "simplelink_cc13x2_26x2_sdk_4_20_01_04/license_simplelink_cc13x2_26x2_sdk_4_20_01_04.txt",
+    "local": "full",
+    "localPackagePath": "/Users/maxchernotsky/ti//simplelink_cc13x2_26x2_sdk_4_20_01_04",
+    "metadataVersion": "3.0.0",
+    "name": "SimpleLink CC13x2 26x2 SDK",
+    "package": "SimpleLink CC13x2 26x2 SDK",
+    "packageId": "com.ti.SIMPLELINK_CC13X2_26X2_SDK",
+    "packageOrder": 0,
+    "packagePath": "simplelink_cc13x2_26x2_sdk_4_20_01_04",
+    "packageUId": "com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.01.04",
+    "packageVersion": "4.20.01.04",
+    "resourceType": "packageOverview",
+    "rootCategory": [
+      "Software",
+      "SimpleLink CC13x2 26x2 SDK"
+    ],
+    "semver": "4.20.1",
+    "type": "software",
+    "version": "4.20.01.04"
+  },
+  {
+    "_id": "BV3Jjbw01LPHLs",
+    "allowPartialDownload": false,
+    "categories": [
+      [
+        "Software Tools"
+      ]
+    ],
+    "dependencies": [],
+    "description": "The Arm GNU Embedded Toolchain is a ready-to-use, open source suite of tools for C, C++ and Assembly programming targeting Arm Cortex-M and Cortex-R family of processors.",
+    "devices": [],
+    "devicesVariants": [],
+    "fullPaths": [
+      [
+        "Software Tools"
+      ]
+    ],
+    "fullPathsPublicIds": [
+      "AKXUctHODW.MOfhnjKPo2w"
+    ],
+    "id": "arm.gnu",
+    "includedFiles": [
+      "."
+    ],
+    "includedFilesForDownload": [
+      "gcc_arm_none_eabi_9_2_1"
+    ],
+    "includedResources": [
+      {
+        "package": "arm.gnu__9.2.1"
+      }
+    ],
+    "local": "full",
+    "localPackagePath": "/Applications/ti//gcc_arm_none_eabi_9_2_1",
+    "metadataVersion": "3.0.0",
+    "name": "Arm GNU Embedded Toolchain",
+    "package": "Arm GNU Embedded Toolchain",
+    "packageId": "arm.gnu",
+    "packageOrder": 58,
+    "packagePath": "gcc_arm_none_eabi_9_2_1",
+    "packageUId": "arm.gnu__9.2.1",
+    "packageVersion": "9.2.1",
+    "resourceType": "packageOverview",
+    "rootCategory": [
+      "Software Tools",
+      "Arm GNU Embedded Toolchain"
+    ],
+    "semver": "9.2.1",
+    "shortDescription": "The Arm GNU Embedded Toolchain is a ready-to-use, open source suite of tools for C, C++ and Assembly programming targeting Arm Cortex-M and Cortex-R family of processors.",
+    "type": "software",
+    "version": "9.2.1"
+  },
+  {
+    "_id": "BV3-T5UMAqXdLw",
+    "allowPartialDownload": false,
+    "categories": [
+      [
+        "Software"
+      ]
+    ],
+    "dependencies": [
+      {
+        "refId": "xdctools",
+        "require": "optional",
+        "semver": "3.61.0",
+        "version": "3.61.00.16",
+        "versionRange": "3.61.00.16"
+      },
+      {
+        "refId": "arm.gnu",
+        "require": "optional",
+        "semver": "9.2.1",
+        "version": "9.2.1",
+        "versionRange": "9.2.1"
+      },
+      {
+        "refId": "com.ti.SIMPLELINK_ACADEMY_CC13X2_26X2_SDK",
+        "require": "optional",
+        "semver": "4.10.1",
+        "version": "4.10.01.00",
+        "versionRange": "4.10.01.00"
+      }
+    ],
+    "description": "<p>The SimpleLink™ CC13x2_26x2 Software Development Kit (SDK) delivers components that enable engineers to develop applications on the Texas Instruments SimpleLink CC13x2 and CC26x2 family of wireless microcontroller (MCUs). This software toolkit provides a cohesive and consistent software experience for all SimpleLink CC13x2 and CC26x2 wireless MCU users by packaging essential software components, such as a Bluetooth® low energy (BLE) protocol stack supporting Bluetooth 5, Thread 1.1 networking stack based on OpenThread, ZigBee 3.0 compliant protocol suite, RF-Proprietary examples, TI's 15.4 Stack as well as the TI-RTOS kernel and TI Drivers in one easy-to-use software package along with example applications and documentation. In addition, the Dynamic Multi-Protocol Manager (DMM) software component enables multiprotocol development on a single SimpleLink wireless MCU through time division multiplexing. The SimpleLink MCU portfolio offers a single development environment that delivers flexible hardware, software and tool options for customers developing wired and wireless applications. With 100 percent code reuse across host MCUs, Wi-Fi™, Bluetooth low energy, Sub-1GHz devices and more, choose the MCU or connectivity standard that fits your design. A one-time investment with the SimpleLink software development kit (SDK) allows you to reuse often, opening the door to create unlimited applications. For more information, visit <a href=\"http://www.ti.com/simplelink\">http://www.ti.com/simplelink</a>.</p>",
+    "devices": [
+      "CC13X2",
+      "CC26X2",
+      "CC1312R1F3",
+      "CC1352R1F3",
+      "CC2652R1F"
+    ],
+    "devicesVariants": [
+      "CC1312R1F3",
+      "CC1352R1F3",
+      "CC2652R1F"
+    ],
+    "devtools": [
+      "CC1312R LaunchPad",
+      "CC1352R LaunchPad",
+      "ULP Sense BoosterPack",
+      "CC26x2R LaunchPad",
+      "Code Composer Studio (CCS)",
+      "UniFlash",
+      "PinMux",
+      "GUI Composer",
+      "SEGGER J-Link",
+      "IAR I-JET",
+      "IAR Embedded Workbench for ARM",
+      "ELPROTRONIC",
+      "SEGGER",
+      "ELNEC",
+      "BPM Microsystems",
+      "DATA IO",
+      "Sensor Controller Studio",
+      "SmartRF Studio",
+      "SmartRF Packet Sniffer 2",
+      "Open On-Chip Debugger (OpenOCD) for SimpleLink™ Connected MCUs",
+      "XDS100v2 JTAG Debug Probe (14-pin TI version)",
+      "XDS100v2 JTAG Debug Probe (20-pin TI version)",
+      "XDS100v2 JTAG Debug Probe (ARM version)",
+      "XDS110 Debug Probe",
+      "XDS200 USB Debug Probe",
+      "XDS560v2 System Trace USB Debug Probe"
+    ],
+    "devtools_category": [
+      "CC1312R LaunchPad",
+      "CC1352R LaunchPad",
+      "ULP Sense BoosterPack",
+      "CC26x2R LaunchPad",
+      "Code Composer Studio (CCS)",
+      "UniFlash",
+      "PinMux",
+      "GUI Composer",
+      "SEGGER J-Link",
+      "IAR I-JET",
+      "IAR Embedded Workbench for ARM",
+      "ELPROTRONIC",
+      "SEGGER",
+      "ELNEC",
+      "BPM Microsystems",
+      "DATA IO",
+      "Sensor Controller Studio",
+      "SmartRF Studio",
+      "SmartRF Packet Sniffer 2",
+      "Open On-Chip Debugger (OpenOCD) for SimpleLink™ Connected MCUs",
+      "XDS100v2 JTAG Debug Probe (14-pin TI version)",
+      "XDS100v2 JTAG Debug Probe (20-pin TI version)",
+      "XDS100v2 JTAG Debug Probe (ARM version)",
+      "XDS110 Debug Probe",
+      "XDS200 USB Debug Probe",
+      "XDS560v2 System Trace USB Debug Probe"
+    ],
+    "fullPaths": [
+      [
+        "Software"
+      ]
+    ],
+    "fullPathsPublicIds": [
+      "AOSQDVXMohlV5LElLx5wxA"
+    ],
+    "id": "com.ti.SIMPLELINK_CC13X2_26X2_SDK",
+    "image": "/Applications/ti/simplelink_cc13x2_26x2_sdk_4_10_00_78/.metadata/.tirex/cc13x2_26x2-tirex.png",
+    "includedFiles": [
+      "."
+    ],
+    "includedFilesForDownload": [
+      "simplelink_cc13x2_26x2_sdk_4_10_00_78"
+    ],
+    "includedResources": [
+      {
+        "package": "com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.10.00.78"
+      }
+    ],
+    "license": "simplelink_cc13x2_26x2_sdk_4_10_00_78/license_simplelink_cc13x2_26x2_sdk_4_10_00_78.txt",
+    "local": "full",
+    "localPackagePath": "/Applications/ti/simplelink_cc13x2_26x2_sdk_4_10_00_78",
+    "metadataVersion": "3.0.0",
+    "name": "SimpleLink CC13x2 26x2 SDK",
+    "package": "SimpleLink CC13x2 26x2 SDK",
+    "packageId": "com.ti.SIMPLELINK_CC13X2_26X2_SDK",
+    "packageOrder": 246,
+    "packagePath": "simplelink_cc13x2_26x2_sdk_4_10_00_78",
+    "packageUId": "com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.10.00.78",
+    "packageVersion": "4.10.00.78",
+    "resourceType": "packageOverview",
+    "rootCategory": [
+      "Software",
+      "SimpleLink CC13x2 26x2 SDK"
+    ],
+    "semver": "4.10.0",
+    "shortDescription": "The SimpleLink™ CC13x2_26x2 Software Development Kit (SDK) delivers components that enable engineers to develop applications on the Texas Instruments SimpleLink CC13x2 and CC26x2 family of wireless microcontroller (MCUs). This software toolkit provi...",
+    "type": "software",
+    "version": "4.10.00.78"
+  },
+  {
+    "_id": "BV3lxRHdfTeqOY",
+    "allowPartialDownload": false,
+    "categories": [
+      [
+        "Software"
+      ]
+    ],
+    "dependencies": [
+      {
+        "refId": "xdctools",
+        "require": "optional",
+        "semver": "3.51.3",
+        "version": "3.51.03.28",
+        "versionRange": "3.51.03.28"
+      },
+      {
+        "refId": "com.ti.SIMPLELINK_ACADEMY_CC2640R2SDK",
+        "require": "optional",
+        "semver": "4.10.1",
+        "version": "4.10.01.00",
+        "versionRange": "4.10.01.00"
+      }
+    ],
+    "description": "Welcome to the SimpleLink CC2640R2 SDK",
+    "devices": [
+      "CC26X0",
+      "CC2640R2F"
+    ],
+    "devicesVariants": [
+      "CC2640R2F"
+    ],
+    "devtools": [
+      "CC2640R2 LaunchPad",
+      "CC2640R2 Remote Control",
+      "Angle of Arrival BoosterPack",
+      "Code Composer Studio (CCS)",
+      "UniFlash",
+      "PinMux",
+      "GUI Composer",
+      "SEGGER J-Link",
+      "IAR I-JET",
+      "IAR Embedded Workbench for ARM",
+      "ELPROTRONIC",
+      "SEGGER",
+      "ELNEC",
+      "BPM Microsystems",
+      "DATA IO",
+      "Sensor Controller Studio",
+      "SmartRF Studio",
+      "SmartRF Packet Sniffer 2",
+      "Open On-Chip Debugger (OpenOCD) for SimpleLink™ Connected MCUs",
+      "XDS100v2 JTAG Debug Probe (14-pin TI version)",
+      "XDS100v2 JTAG Debug Probe (20-pin TI version)",
+      "XDS100v2 JTAG Debug Probe (ARM version)",
+      "XDS110 Debug Probe",
+      "XDS200 USB Debug Probe",
+      "XDS560v2 System Trace USB Debug Probe"
+    ],
+    "devtools_category": [
+      "CC2640R2 LaunchPad",
+      "CC2640R2 Remote Control",
+      "Angle of Arrival BoosterPack",
+      "Code Composer Studio (CCS)",
+      "UniFlash",
+      "PinMux",
+      "GUI Composer",
+      "SEGGER J-Link",
+      "IAR I-JET",
+      "IAR Embedded Workbench for ARM",
+      "ELPROTRONIC",
+      "SEGGER",
+      "ELNEC",
+      "BPM Microsystems",
+      "DATA IO",
+      "Sensor Controller Studio",
+      "SmartRF Studio",
+      "SmartRF Packet Sniffer 2",
+      "Open On-Chip Debugger (OpenOCD) for SimpleLink™ Connected MCUs",
+      "XDS100v2 JTAG Debug Probe (14-pin TI version)",
+      "XDS100v2 JTAG Debug Probe (20-pin TI version)",
+      "XDS100v2 JTAG Debug Probe (ARM version)",
+      "XDS110 Debug Probe",
+      "XDS200 USB Debug Probe",
+      "XDS560v2 System Trace USB Debug Probe"
+    ],
+    "fullPaths": [
+      [
+        "Software"
+      ]
+    ],
+    "fullPathsPublicIds": [
+      "ADMz2LGBMlg4I83PRXXFWw"
+    ],
+    "id": "com.ti.SIMPLELINK_CC2640R2_SDK",
+    "image": "/Applications/ti//simplelink_cc2640r2_sdk_4_10_00_10/.metadata/.tirex/cc2640r2-tirex.png",
+    "includedFiles": [
+      "."
+    ],
+    "includedFilesForDownload": [
+      "simplelink_cc2640r2_sdk_4_10_00_10"
+    ],
+    "includedResources": [
+      {
+        "package": "com.ti.SIMPLELINK_CC2640R2_SDK__4.10.00.10"
+      }
+    ],
+    "license": "simplelink_cc2640r2_sdk_4_10_00_10/license_simplelink_cc2640r2_sdk_4_10_00_10.txt",
+    "local": "full",
+    "localPackagePath": "/Applications/ti//simplelink_cc2640r2_sdk_4_10_00_10",
+    "metadataVersion": "3.0.0",
+    "name": "SimpleLink CC2640R2 SDK",
+    "package": "SimpleLink CC2640R2 SDK",
+    "packageId": "com.ti.SIMPLELINK_CC2640R2_SDK",
+    "packageOrder": 248,
+    "packagePath": "simplelink_cc2640r2_sdk_4_10_00_10",
+    "packageUId": "com.ti.SIMPLELINK_CC2640R2_SDK__4.10.00.10",
+    "packageVersion": "4.10.00.10",
+    "resourceType": "packageOverview",
+    "rootCategory": [
+      "Software",
+      "SimpleLink CC2640R2 SDK"
+    ],
+    "semver": "4.10.0",
+    "shortDescription": "Welcome to the SimpleLink CC2640R2 SDK",
+    "type": "software",
+    "version": "4.10.00.10"
+  },
+  {
+    "_id": "BV3vnhvd69A2OM",
+    "allowPartialDownload": false,
+    "categories": [
+      [
+        "Software"
+      ]
+    ],
+    "dependencies": [
+      {
+        "refId": "xdctools",
+        "require": "optional",
+        "semver": "3.61.1",
+        "version": "3.61.01.25",
+        "versionRange": "3.61.01.25"
+      },
+      {
+        "refId": "sysconfig",
+        "require": "optional",
+        "semver": "1.4.0",
+        "version": "1.4.0",
+        "versionRange": "1.4.0"
+      },
+      {
+        "refId": "arm.gnu",
+        "require": "optional",
+        "semver": "9.2.1",
+        "version": "9.2.1",
+        "versionRange": "9.2.1"
+      },
+      {
+        "refId": "com.ti.SIMPLELINK_ACADEMY_CC13X2_26X2_SDK",
+        "require": "optional",
+        "semver": "4.20.0",
+        "version": "4.20.00.00",
+        "versionRange": "4.20.00.00"
+      }
+    ],
+    "description": "<p>The SimpleLink™ CC13x2_26x2 Software Development Kit (SDK) delivers components that enable engineers to develop applications on the Texas Instruments SimpleLink CC13x2 and CC26x2 family of wireless microcontroller (MCUs). This software toolkit provides a cohesive and consistent software experience for all SimpleLink CC13x2 and CC26x2 wireless MCU users by packaging essential software components, such as a Bluetooth® low energy (BLE) protocol stack supporting Bluetooth 5, Thread 1.1 networking stack based on OpenThread, ZigBee 3.0 compliant protocol suite, RF-Proprietary examples, TI's 15.4 Stack as well as the TI-RTOS kernel and TI Drivers in one easy-to-use software package along with example applications and documentation. In addition, the Dynamic Multi-Protocol Manager (DMM) software component enables multiprotocol development on a single SimpleLink wireless MCU through time division multiplexing. The SimpleLink MCU portfolio offers a single development environment that delivers flexible hardware, software and tool options for customers developing wired and wireless applications. With 100 percent code reuse across host MCUs, Wi-Fi™, Bluetooth low energy, Sub-1GHz devices and more, choose the MCU or connectivity standard that fits your design. A one-time investment with the SimpleLink software development kit (SDK) allows you to reuse often, opening the door to create unlimited applications. For more information, visit <a href=\"http://www.ti.com/simplelink\">http://www.ti.com/simplelink</a>.</p>",
+    "devices": [
+      "CC13X2",
+      "CC26X2",
+      "CC1312R1F3",
+      "CC1352R1F3",
+      "CC2652R1F"
+    ],
+    "devicesVariants": [
+      "CC1312R1F3",
+      "CC1352R1F3",
+      "CC2652R1F"
+    ],
+    "devtools": [
+      "CC26x2R LaunchPad",
+      "Code Composer Studio (CCS)",
+      "UniFlash",
+      "PinMux",
+      "GUI Composer",
+      "SEGGER J-Link",
+      "IAR I-JET",
+      "IAR Embedded Workbench for ARM",
+      "ELPROTRONIC",
+      "SEGGER",
+      "ELNEC",
+      "BPM Microsystems",
+      "DATA IO",
+      "Sensor Controller Studio",
+      "SmartRF Studio",
+      "SmartRF Packet Sniffer 2",
+      "Open On-Chip Debugger (OpenOCD) for SimpleLink™ Connected MCUs",
+      "XDS100v2 JTAG Debug Probe (14-pin TI version)",
+      "XDS100v2 JTAG Debug Probe (20-pin TI version)",
+      "XDS100v2 JTAG Debug Probe (ARM version)",
+      "XDS110 Debug Probe",
+      "XDS200 USB Debug Probe",
+      "XDS560v2 System Trace USB Debug Probe",
+      "CC1312R LaunchPad",
+      "CC1352R LaunchPad",
+      "ULP Sense BoosterPack"
+    ],
+    "devtools_category": [
+      "CC26x2R LaunchPad",
+      "Code Composer Studio (CCS)",
+      "UniFlash",
+      "PinMux",
+      "GUI Composer",
+      "SEGGER J-Link",
+      "IAR I-JET",
+      "IAR Embedded Workbench for ARM",
+      "ELPROTRONIC",
+      "SEGGER",
+      "ELNEC",
+      "BPM Microsystems",
+      "DATA IO",
+      "Sensor Controller Studio",
+      "SmartRF Studio",
+      "SmartRF Packet Sniffer 2",
+      "Open On-Chip Debugger (OpenOCD) for SimpleLink™ Connected MCUs",
+      "XDS100v2 JTAG Debug Probe (14-pin TI version)",
+      "XDS100v2 JTAG Debug Probe (20-pin TI version)",
+      "XDS100v2 JTAG Debug Probe (ARM version)",
+      "XDS110 Debug Probe",
+      "XDS200 USB Debug Probe",
+      "XDS560v2 System Trace USB Debug Probe",
+      "CC1312R LaunchPad",
+      "CC1352R LaunchPad",
+      "ULP Sense BoosterPack"
+    ],
+    "fullPaths": [
+      [
+        "Software"
+      ]
+    ],
+    "fullPathsPublicIds": [
+      "AOSQDVXMohlV5LElLx5wxA"
+    ],
+    "id": "com.ti.SIMPLELINK_CC13X2_26X2_SDK",
+    "image": "/Users/maxchernotsky/ti//simplelink_cc13x2_26x2_sdk_4_20_00_35/.metadata/.tirex/cc13x2_26x2-tirex.png",
+    "includedFiles": [
+      "."
+    ],
+    "includedFilesForDownload": [
+      "simplelink_cc13x2_26x2_sdk_4_20_00_35"
+    ],
+    "includedResources": [
+      {
+        "package": "com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35"
+      }
+    ],
+    "license": "simplelink_cc13x2_26x2_sdk_4_20_00_35/license_simplelink_cc13x2_26x2_sdk_4_20_00_35.txt",
+    "local": "full",
+    "localPackagePath": "/Users/maxchernotsky/ti//simplelink_cc13x2_26x2_sdk_4_20_00_35",
+    "metadataVersion": "3.0.0",
+    "name": "SimpleLink CC13x2 26x2 SDK",
+    "package": "SimpleLink CC13x2 26x2 SDK",
+    "packageId": "com.ti.SIMPLELINK_CC13X2_26X2_SDK",
+    "packageOrder": 273,
+    "packagePath": "simplelink_cc13x2_26x2_sdk_4_20_00_35",
+    "packageUId": "com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35",
+    "packageVersion": "4.20.00.35",
+    "resourceType": "packageOverview",
+    "rootCategory": [
+      "Software",
+      "SimpleLink CC13x2 26x2 SDK"
+    ],
+    "semver": "4.20.0",
+    "type": "software",
+    "version": "4.20.00.35"
+  },
+  {
+    "_id": "BV3eZy7O5NJxz0",
+    "allowPartialDownload": false,
+    "categories": [
+      [
+        "Software"
+      ]
+    ],
+    "dependencies": [
+      {
+        "refId": "xdctools",
+        "require": "optional",
+        "semver": "3.50.8",
+        "version": "3.50.08.24",
+        "versionRange": "3.50.08.24"
+      },
+      {
+        "refId": "com.ti.SIMPLELINK_ACADEMY_CC26X2SDK",
+        "require": "optional",
+        "semver": "2.30.2",
+        "version": "2.30.02.00",
+        "versionRange": "2.30.02.00"
+      },
+      {
+        "refId": "com.ti.SIMPLELINK_ACADEMY_CC26X2SDK_CN",
+        "require": "optional",
+        "semver": "1.15.5",
+        "version": "1.15.05.02",
+        "versionRange": "1.15.05.02"
+      }
+    ],
+    "description": "<p>The SimpleLink™ CC26x2 SDK is part of TI's SimpleLink MCU platform, offering a single development environment that delivers flexible hardware, software and tool options for customers developing wired and wireless applications. SimpleLink CC26x2 Software Development Kit (SDK) is a set of software development tools that enables_engineers to develop software applications on the SimpleLink CC26x2 ULP devices. This powerful software toolkit provides a cohesive and consistent software experience for all SimpleLink CC26x2 users by packaging essential software components such as TI RTOS, peripheral drivers, TI 15.4-Stack, Bluetooth® low energy, and TI OpenThread Stack examples in one easy-to-use software package along with exhaustive documentation. For more information, visit <a href=\"http://www.ti.com/simplelink\">http://www.ti.com/simplelink</a>.</p>",
+    "devices": [
+      "CC26X2",
+      "CC2652R1F"
+    ],
+    "devicesVariants": [
+      "CC2652R1F"
+    ],
+    "devtools": [
+      "CC26x2R LaunchPad",
+      "Code Composer Studio (CCS)",
+      "UniFlash",
+      "PinMux",
+      "GUI Composer",
+      "SEGGER J-Link",
+      "IAR I-JET",
+      "IAR Embedded Workbench for ARM",
+      "ELPROTRONIC",
+      "SEGGER",
+      "ELNEC",
+      "BPM Microsystems",
+      "DATA IO",
+      "Sensor Controller Studio",
+      "SmartRF Studio",
+      "SmartRF Packet Sniffer 2",
+      "Open On-Chip Debugger (OpenOCD) for SimpleLink™ Connected MCUs",
+      "XDS100v2 JTAG Debug Probe (14-pin TI version)",
+      "XDS100v2 JTAG Debug Probe (20-pin TI version)",
+      "XDS100v2 JTAG Debug Probe (ARM version)",
+      "XDS110 Debug Probe",
+      "XDS200 USB Debug Probe",
+      "XDS560v2 System Trace USB Debug Probe",
+      "ULP Sense BoosterPack"
+    ],
+    "devtools_category": [
+      "CC26x2R LaunchPad",
+      "Code Composer Studio (CCS)",
+      "UniFlash",
+      "PinMux",
+      "GUI Composer",
+      "SEGGER J-Link",
+      "IAR I-JET",
+      "IAR Embedded Workbench for ARM",
+      "ELPROTRONIC",
+      "SEGGER",
+      "ELNEC",
+      "BPM Microsystems",
+      "DATA IO",
+      "Sensor Controller Studio",
+      "SmartRF Studio",
+      "SmartRF Packet Sniffer 2",
+      "Open On-Chip Debugger (OpenOCD) for SimpleLink™ Connected MCUs",
+      "XDS100v2 JTAG Debug Probe (14-pin TI version)",
+      "XDS100v2 JTAG Debug Probe (20-pin TI version)",
+      "XDS100v2 JTAG Debug Probe (ARM version)",
+      "XDS110 Debug Probe",
+      "XDS200 USB Debug Probe",
+      "XDS560v2 System Trace USB Debug Probe",
+      "ULP Sense BoosterPack"
+    ],
+    "fullPaths": [
+      [
+        "Software"
+      ]
+    ],
+    "fullPathsPublicIds": [
+      "APqCGp80ZlIppjF93.KHlQ"
+    ],
+    "id": "com.ti.SIMPLELINK_CC26X2_SDK",
+    "image": "/Applications/ti/simplelink_cc26x2_sdk_2_30_00_34/.metadata/.tirex/cc26x2-tirex.png",
+    "includedFiles": [
+      "."
+    ],
+    "includedFilesForDownload": [
+      "simplelink_cc26x2_sdk_2_30_00_34"
+    ],
+    "includedResources": [
+      {
+        "package": "com.ti.SIMPLELINK_CC26X2_SDK__2.30.00.34"
+      }
+    ],
+    "license": "simplelink_cc26x2_sdk_2_30_00_34/license_simplelink_cc26x2_sdk_2_30_00_34.txt",
+    "local": "full",
+    "localPackagePath": "/Applications/ti/simplelink_cc26x2_sdk_2_30_00_34",
+    "metadataVersion": "3.0.0",
+    "name": "SimpleLink CC26X2 SDK",
+    "package": "SimpleLink CC26X2 SDK",
+    "packageId": "com.ti.SIMPLELINK_CC26X2_SDK",
+    "packageOrder": 300,
+    "packagePath": "simplelink_cc26x2_sdk_2_30_00_34",
+    "packageUId": "com.ti.SIMPLELINK_CC26X2_SDK__2.30.00.34",
+    "packageVersion": "2.30.00.34",
+    "resourceType": "packageOverview",
+    "rootCategory": [
+      "Software",
+      "SimpleLink CC26X2 SDK"
+    ],
+    "semver": "2.30.0",
+    "type": "software",
+    "version": "2.30.00.34"
+  },
+  {
+    "_id": "BV3BtCfxJu_ej0",
+    "allowPartialDownload": false,
+    "categories": [
+      [
+        "Software"
+      ]
+    ],
+    "dependencies": [],
+    "description": "Tools for developing and using embedded target content that extends or depends on <a href:\"http://www.eclipse.org/rtsc\">RTSC</a> components",
+    "devices": [],
+    "devicesVariants": [],
+    "fullPaths": [
+      [
+        "Software"
+      ]
+    ],
+    "fullPathsPublicIds": [
+      "AP82c8D8M4mZXxQLeHb-PA"
+    ],
+    "id": "xdctools",
+    "image": "/Applications/CCSV9_CC2640/xdctools_3_60_02_34_core/.metadata/.tirex/logo.png",
+    "includedFiles": [
+      "."
+    ],
+    "includedFilesForDownload": [
+      "xdctools_3_60_02_34_core"
+    ],
+    "includedResources": [
+      {
+        "package": "xdctools__3.60.02.34"
+      }
+    ],
+    "local": "full",
+    "localPackagePath": "/Applications/CCSV9_CC2640/xdctools_3_60_02_34_core",
+    "metadataVersion": "3.0.0",
+    "name": "XDCTools",
+    "package": "XDCTools",
+    "packageId": "xdctools",
+    "packageOrder": 423,
+    "packagePath": "xdctools_3_60_02_34_core",
+    "packageUId": "xdctools__3.60.02.34",
+    "packageVersion": "3.60.02.34",
+    "resourceType": "packageOverview",
+    "rootCategory": [
+      "Software",
+      "XDCTools"
+    ],
+    "semver": "3.60.2",
+    "tags": [
+      "ROV",
+      "RTA",
+      "XDCtools",
+      "XDC",
+      "RTSC",
+      "SYS/BIOS",
+      "TI-RTOS"
+    ],
+    "type": "software",
+    "version": "3.60.02.34"
+  },
+  {
+    "_id": "BV3_rKLdTA_O4M",
+    "allowPartialDownload": false,
+    "categories": [
+      [
+        "Software"
+      ]
+    ],
+    "dependencies": [],
+    "description": "Tools for developing and using embedded target content that extends or depends on <a href:\"http://www.eclipse.org/rtsc\">RTSC</a> components",
+    "devices": [],
+    "devicesVariants": [],
+    "fullPaths": [
+      [
+        "Software"
+      ]
+    ],
+    "fullPathsPublicIds": [
+      "AP82c8D8M4mZXxQLeHb-PA"
+    ],
+    "id": "xdctools",
+    "image": "/Applications/ti/ccs1000/xdctools_3_61_00_16_core/.metadata/.tirex/logo.png",
+    "includedFiles": [
+      "."
+    ],
+    "includedFilesForDownload": [
+      "xdctools_3_61_00_16_core"
+    ],
+    "includedResources": [
+      {
+        "package": "xdctools__3.61.00.16"
+      }
+    ],
+    "local": "full",
+    "localPackagePath": "/Applications/ti/ccs1000/xdctools_3_61_00_16_core",
+    "metadataVersion": "3.0.0",
+    "name": "XDCTools",
+    "package": "XDCTools",
+    "packageId": "xdctools",
+    "packageOrder": 391,
+    "packagePath": "xdctools_3_61_00_16_core",
+    "packageUId": "xdctools__3.61.00.16",
+    "packageVersion": "3.61.00.16",
+    "resourceType": "packageOverview",
+    "rootCategory": [
+      "Software",
+      "XDCTools"
+    ],
+    "semver": "3.61.0",
+    "shortDescription": "Tools for developing and using embedded target content that extends or depends on RTSC components",
+    "tags": [
+      "ROV",
+      "RTA",
+      "XDCtools",
+      "XDC",
+      "RTSC",
+      "SYS/BIOS",
+      "TI-RTOS"
+    ],
+    "type": "software",
+    "version": "3.61.00.16"
+  }
+]

@@ -1663,6 +1663,7 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
       break;
     }
 
+
     case MR_EVT_INSUFFICIENT_MEM:
     {
       // We are running out of memory.
