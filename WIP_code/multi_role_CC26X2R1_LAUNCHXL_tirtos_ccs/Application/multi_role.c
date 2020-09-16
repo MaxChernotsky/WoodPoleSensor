@@ -2256,6 +2256,10 @@ static void multi_role_handleKeys(uint8_t keys)
 
         foundCorrectDev = 0;
         timeClient = true;
+        GapAdv_disable(advHandle);
+        GapAdv_disable(advHandleTicks);
+        GapAdv_disable(advHandleTime);
+
         multi_role_doDiscoverDevices();
 
         //left button handler
