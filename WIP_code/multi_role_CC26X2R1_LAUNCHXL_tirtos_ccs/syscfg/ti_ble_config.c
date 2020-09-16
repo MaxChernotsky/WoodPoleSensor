@@ -180,7 +180,13 @@ uint8_t advData3[] =
 
    //tick delay
    0x00, //singular bit needed to determine the delay required in the ticks
-   0x00
+   0x00,
+
+
+   //target device ID information
+   'A',
+   '3'
+
 };
 
 

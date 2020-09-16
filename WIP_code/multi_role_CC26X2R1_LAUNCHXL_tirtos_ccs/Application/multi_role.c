@@ -157,10 +157,13 @@ typedef enum {
 
 
 char ownDevAlpha = 'A';
-char ownDevNum = '1';
+char ownDevNum = '2';
+
+char targetDevAlpha = 'A';
+char targetDevNum = '3';
 
 
-int ownChannel = 41; //41-A
+
 int foundCorrectDev = 0;
 
 char manuToPrint[100];
@@ -1514,8 +1517,15 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
 
           //disable scan after finding first device
           //need to alter this to run only when looking for timeServer advData
-          GapScan_disable();
 
+
+          //determine if the advertising report is from the correct device
+          bool correctDevice = isCorrectDevice(manuDataOnly, ownDevAlpha, ownDevNum);
+
+          //disable advertising once the correct device is being broadcasted
+          if (correctDevice) {
+              GapScan_disable();
+          }
 
 
 
@@ -1606,6 +1616,8 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
       if (timeClient){
 
           Log_info0("Isolating received timestamp:");
+
+          //the latest advReport will be the one that matches the value
           multi_role_tickIsolation();
 
       }//end for loop for timeClient
@@ -1963,14 +1975,9 @@ static void multi_role_addScanInfo(uint8_t *pAddr, uint8_t addrType, uint8_t txP
     scanList[numScanRes].txPower = txPower;
     scanList[numScanRes].rssi = rssi;
     scanList[numScanRes].dataLen = dataLen;
-    //scanList[numScanRes].manuData = receivedData;
     strcpy(scanList[numScanRes].manuData, receivedData);
 
     Log_info4(ANSI_COLOR(FG_BLUE) "Dev No: %d" ANSI_COLOR(ATTR_RESET)  ", txPower: %d, rssi %d, BT ADDR: " ANSI_COLOR(FG_GREEN) "%s" ANSI_COLOR(ATTR_RESET), numScanRes+1, txPower, rssi, (uintptr_t)Util_convertBdAddr2Str(pAddr));
-
-    //Log_info1("Custom Data: %d", receivedData);
-
-    //Log_info0(ANSI_COLOR(FG_GREEN) "Devices matching SERV_UUID" ANSI_COLOR(ATTR_RESET))
 
     // Increment scan result count
     numScanRes++;
@@ -3404,24 +3411,42 @@ static void multi_role_timeIsolation(void) {
 static void multi_role_tickIsolation (void) {
     //new function to call when doing tick isolation for syncing
 
+    int index = numScanRes;
     //need to isolate the incoming tick tx delay
 
     //variable to temporary hold the manufacturer data to be edited
     char tempData[10];
-    strcpy(tempData, scanList[0].manuData);
+    strcpy(tempData, scanList[index].manuData);
 
     //remove the colon and '0' found in the received data
     Util_removeChar(tempData, ':');
-    Util_removeChar(tempData, '0');
-    Log_info1("Removed colon: %s", (uintptr_t)tempData);
+    //Util_removeChar(tempData, '0');
+    Log_info0("Removed colon");
+    printf("removed colon value: %s\n", tempData);
+
 
     //isolate the txDelay value
-    char txDelayChar[4];
-    strncpy(txDelayChar, tempData+3, sizeof(txDelayChar));
+    char txDelayChar[6];
+    size_t txDelayCount = 4;
+    //printf("txDelay isolation %s\n", txDelayChar);
+    //Util_removeChar(tempData, '0');
+
+    strncpy(txDelayChar, tempData+4, txDelayCount);
+    printf("txDelay isolation: %s\n", txDelayChar);
+    Util_removeChar(txDelayChar, '0');
+    printf("txDelay remove 0: %s\n", txDelayChar);
+
+
+    //add terminating value
+    txDelayChar[5] = '\0';
+
+    printf("after terminating value %s\n", txDelayChar);
+
 
     uint32_t txDelay = strtol(txDelayChar, 0, 16);
 
-    Log_info1("txDelay: %d", txDelay);
+    Log_info1("Received TX Delay: %d", txDelay);
+    printf("received tx delay: %d\n", txDelay);
 
     //tick RX delay calculation
     ticksPostScan = Clock_getTicks();
@@ -3429,6 +3454,7 @@ static void multi_role_tickIsolation (void) {
 
     uint32_t combinedTickDelay = txDelay + ticksDiffScan;
 
+    Log_info1("Combined Tick Delay: %d", combinedTickDelay);
     Log_info1("current clock ticks: %d", ticksPostScan);
     Log_info1("RX tick diff: %d", ticksDiffScan);
 
@@ -3437,7 +3463,7 @@ static void multi_role_tickIsolation (void) {
     Log_info0("Starting Clocks...");
 
 
-    uint32_t startingTimeClock = 1500-combinedTickDelay;
+    uint32_t startingTimeClock = 5000-combinedTickDelay;
     Log_info1("Adjusted clock time delay: %d", startingTimeClock);
 
     Util_restartClock(&clkTimeSync, startingTimeClock);
