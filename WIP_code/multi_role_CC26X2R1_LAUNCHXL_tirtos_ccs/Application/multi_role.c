@@ -116,6 +116,7 @@ Target Device: cc13x2_26x2
 #define MR_EVT_INSUFFICIENT_MEM    13
 #define MR_EVT_TIMESYNC            14
 #define MR_EVT_SECONDSSET          15
+#define MR_EVT_PERIODICDATA        16
 
 // Internal Events for RTOS application
 #define MR_ICALL_EVT                         ICALL_MSG_EVENT_ID // Event_Id_31
@@ -157,10 +158,10 @@ typedef enum {
 
 
 char ownDevAlpha = 'A';
-char ownDevNum = '2';
+char ownDevNum = '1';
 
 char targetDevAlpha = 'A';
-char targetDevNum = '3';
+char targetDevNum = '2';
 
 
 
@@ -343,6 +344,8 @@ static Clock_Struct clkTimeSync;
 
 static Clock_Struct clkSecondsSet;
 
+static Clock_Struct clkPeriodicData;
+
 // Memory to pass periodic event to clock handler
 mrClockEventData_t periodicUpdateData =
 {
@@ -364,6 +367,18 @@ mrClockEventData_t secondssetClk =
 {
  .event = MR_EVT_SECONDSSET
 };
+
+//clock structure for the periodic interval Data set
+mrClockEventData_t periodicDataClk =
+{
+ .event = MR_EVT_PERIODICDATA
+};
+
+
+
+
+
+
 
 // Queue object used for app messages
 static Queue_Struct appMsg;
@@ -592,6 +607,10 @@ static void multi_role_init(void)
   //create one-shot clock for timesync based on call from advert data
   Util_constructClock(&clkTimeSync, multi_role_clockHandler, 1500, 0, false, (UArg)&timeSyncClk);
   Util_constructClock(&clkSecondsSet, multi_role_clockHandler, 1500, 0, false, (UArg)&secondssetClk);
+
+  //create periodic clock for periodic data sync but do not start it now
+  Util_constructClock(&clkPeriodicData, multi_role_clockHandler, 20000, 0, false, (UArg)&periodicDataClk);
+
 
   // Init key debouncer
   Board_initKeys(multi_role_keyChangeHandler);
@@ -932,10 +951,19 @@ static void multi_role_processGapMsg(gapEventHdr_t *pMsg)
         //Setup and start advertising
         multi_role_advertInit();
 
+        //disable advertising
+        GapAdv_disable(advHandle);
+        GapAdv_disable(advHandleTicks);
+        GapAdv_disable(advHandleTime);
+
       }
 
       //Setup scanning
       multi_role_scanInit();
+
+      //enable scanning indefinitely
+      numScanRes = 0;
+      GapScan_enable(0, 0, 0);
 
       mrMaxPduSize = pPkt->dataPktLen;
 
@@ -1704,6 +1732,13 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
      break;
     }
 
+    case MR_EVT_PERIODICDATA:
+    {
+
+        Log_info1("Periodic Data Simulation Value");
+        break;
+    }
+
     default:
       // Do nothing.
       break;
@@ -2215,6 +2250,11 @@ static void multi_role_clockHandler(UArg arg)
       //send message to app
       multi_role_enqueueMsg(MR_EVT_SECONDSSET, NULL);
    }
+  else if (pData->event == MR_EVT_PERIODICDATA)
+  {
+      multi_role_enqueueMsg(MR_EVT_PERIODICDATA, NULL);
+  }
+
 }
 
 /*********************************************************************
