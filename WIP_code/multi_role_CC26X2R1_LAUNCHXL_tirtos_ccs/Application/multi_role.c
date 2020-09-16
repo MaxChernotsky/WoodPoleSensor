@@ -3419,8 +3419,6 @@ static void multi_role_tickIsolation (void) {
 
     Log_info1("txDelay: %d", txDelay);
 
-
-
     //tick RX delay calculation
     ticksPostScan = Clock_getTicks();
     uint32_t ticksDiffScan = ticksPostScan - ticksPreScan;
