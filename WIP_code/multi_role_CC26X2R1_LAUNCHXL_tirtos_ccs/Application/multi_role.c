@@ -158,10 +158,10 @@ typedef enum {
 
 
 char ownDevAlpha = 'A';
-char ownDevNum = '2';
+char ownDevNum = '1';
 
 char targetDevAlpha = 'A';
-char targetDevNum = '3';
+char targetDevNum = '2';
 
 
 
@@ -606,10 +606,10 @@ static void multi_role_init(void)
                       (UArg)&periodicUpdateData);
 
   //create one-shot clock for timesync based on call from advert data
-  Util_constructClock(&clkTimeSync, multi_role_clockHandler, 1500, 0, false, (UArg)&timeSyncClk);
+  Util_constructClock(&clkTimeSync, multi_role_clockHandler, 5000, 0, false, (UArg)&timeSyncClk);
   Util_constructClock(&clkSecondsSet, multi_role_clockHandler, 1500, 0, false, (UArg)&secondssetClk);
 
-  //create periodic clock for periodic data sync but do not start it now
+  //create periodic clock for periodic data sync but do not stsart it now
   Util_constructClock(&clkPeriodicData, multi_role_clockHandler, 20000, 0, false, (UArg)&periodicDataClk);
 
 
@@ -964,7 +964,7 @@ static void multi_role_processGapMsg(gapEventHdr_t *pMsg)
 
       //enable scanning indefinitely
       numScanRes = 0;
-      GapScan_enable(0, 0, 0);
+      GapScan_enable(0, 200, 0);
 
 
       //enable timeClient
@@ -1800,19 +1800,24 @@ static void multi_role_processAdvEvent(mrGapAdvEventData_t *pEventData)
           ticksPostAdv = Clock_getTicks();
           Log_info1("ticksPostAdv %d", ticksPostAdv);
 
+          //need to include the current clock values in advertising
+          Log_info1("Scan Delay (RX+TX): %d", combinedTickDelay);
+
           //determine tick difference
           uint32_t ticksDiffAdv = ticksPostAdv - ticksPreAdv;
+          Log_info1("ticksDiffAdv pre combinedTickDelay: %d", ticksDiffAdv);
+
+
+          //if first device only
+          combinedTickDelay = 0;
+
+          //include the previous delays in the ticksDiffAdv variable
+          ticksDiffAdv = ticksDiffAdv + combinedTickDelay;
 
           //convert diff into hex
           char tempTickHexDelay [4];
           sprintf(tempTickHexDelay, "%X", ticksDiffAdv);
           printf("timeTickHexDelay %s\n", tempTickHexDelay);
-
-
-          //need to include the current clock values in advertising
-          Log_info1("Scan Delay (RX+TX): %d", combinedTickDelay);
-
-          //will later add the combinedTickDelay value to the Tx tick value here and advertise
 
           int increment = 0;
 
@@ -1825,10 +1830,10 @@ static void multi_role_processAdvEvent(mrGapAdvEventData_t *pEventData)
               char tempChar[2];
               long int tempLong = 0;
               strncpy(tempChar, tempTickHexDelay + increment, tempSize);
-              Log_info1("tempChar %s", (uintptr_t)tempChar);
+              //Log_info1("tempChar %s", (uintptr_t)tempChar);
 
               tempLong = strtol(tempChar, 0, 16);
-              Log_info1("tempLong %d", tempLong);
+              //Log_info1("tempLong %d", tempLong);
               char toAdvData = tempLong;
 
               advData3[i] = toAdvData;
@@ -2318,8 +2323,6 @@ static void multi_role_handleKeys(uint8_t keys)
     // Check if the key is still pressed
     if (PIN_getInputValue(CONFIG_PIN_BTN1) == 0)
     {
-
-
         //multi_role_serviceDiscovery(0);
 
         foundCorrectDev = 0;
@@ -3374,13 +3377,15 @@ static void multi_role_tickSend (void){
     GapAdv_disable(advHandleTime);
     GapAdv_disable(advHandleTicks);
 
-    //Util_startClock(&clkTimeSync);
+    Util_restartClock(&clkTimeSync, 5000);
+    Util_startClock(&clkTimeSync);
 
     //get preAdv clock time - as advertising starts
     ticksPreAdv = Clock_getTicks();
     Log_info1("ticksPreAdv %d", ticksPreAdv);
 
     tickServer = true;
+    timeClient = false;
 
     //enable advertising
     GapAdv_enable(advHandleTicks, GAP_ADV_ENABLE_OPTIONS_USE_MAX_EVENTS, 1);
@@ -3509,7 +3514,8 @@ static void multi_role_tickIsolation (void) {
     Log_info1("txDelay value in hex %s", (uintptr_t)txDelayChar);
     printf("after terminating value %s\n", txDelayChar);
 
-    uint32_t txDelay = strtol(txDelayChar, 0, 16);
+    uint32_t txDelay = 0;
+    txDelay = strtol(txDelayChar, 0, 16);
 
     Log_info1("Received TX Delay: %d", txDelay);
     printf("received tx delay: %d\n", txDelay);
