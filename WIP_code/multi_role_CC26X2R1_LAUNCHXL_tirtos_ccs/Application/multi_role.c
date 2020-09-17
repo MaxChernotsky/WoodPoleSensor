@@ -163,11 +163,10 @@ char ownDevNum = '3';
 char targetDevAlpha = 'A';
 char targetDevNum = '4';
 
-
-
-int foundCorrectDev = 0;
-
 char manuToPrint[100];
+
+
+
 
 //advertisement timeSync variable
 uint32_t timePreAdv = 0; //preadv values
@@ -488,11 +487,15 @@ static void multi_role_updateRPA(void);
 
 static char * util_arrtohex(uint8_t const *src, uint8_t src_len, uint8_t *dst, uint8_t dst_len, uint8_t reverse);
 
+
+//custom application tasks
 static void multi_role_timeSend(void);
 static void multi_role_timeIsolation(void);
 
 static void multi_role_tickSend(void);
 static void multi_role_tickIsolation(void);
+
+static void multi_role_performIntervalTask (void)
 
 /*********************************************************************
  * EXTERN FUNCTIONS
@@ -2329,7 +2332,6 @@ static void multi_role_handleKeys(uint8_t keys)
     {
         //multi_role_serviceDiscovery(0);
 
-        foundCorrectDev = 0;
         timeClient = true;
         GapAdv_disable(advHandle);
         GapAdv_disable(advHandleTicks);
@@ -3550,6 +3552,35 @@ static void multi_role_tickIsolation (void) {
 
 }//end multi_role_tickIsolation
 
+
+static void multi_role_performIntervalTask (void) {
+    //function to perform tasks to be run at 10min intervals
+    //will be called by the application event
+
+    //perform magnetometer sensor readings
+    //perform accelerometer sensor readings
+
+    //enable scanning
+    //process incoming advert Report data from devices up the line
+
+    //if status byte shows NOT OK, attempt to form connection
+
+
+
+    //compare data
+    //update advertising report
+
+    //begin advertising with new information
+
+    //enable scanning to determine if the device down the line has successfully found the information
+
+    //some other function if the device down the line needs to form a connection
+
+    //update the 10 minute timer value
+
+    //sleep
+
+}//end multi_role_performIntervalTask
 
 /*********************************************************************
 *********************************************************************/
