@@ -966,6 +966,11 @@ static void multi_role_processGapMsg(gapEventHdr_t *pMsg)
       numScanRes = 0;
       GapScan_enable(0, 0, 0);
 
+
+      //enable timeClient
+      timeClient = true;
+
+
       mrMaxPduSize = pPkt->dataPktLen;
 
 
@@ -1742,7 +1747,7 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
     case MR_EVT_PERIODICDATA:
     {
 
-        Log_info1("Periodic Data Simulation Value");
+        Log_info0("Periodic Data Simulation Value");
 
         //will run after the initial time sync has run
 
@@ -3479,25 +3484,29 @@ static void multi_role_tickIsolation (void) {
     //remove the colon and '0' found in the received data
     Util_removeChar(tempData, ':');
     //Util_removeChar(tempData, '0');
-    Log_info0("Removed colon");
+    Log_info1("Removed colon %s", (uintptr_t)tempData);
     printf("removed colon value: %s\n", tempData);
 
 
     //isolate the txDelay value
     char txDelayChar[6];
-    size_t txDelayCount = 4;
+    size_t txDelayCount = 5;
     //printf("txDelay isolation %s\n", txDelayChar);
     //Util_removeChar(tempData, '0');
 
-    strncpy(txDelayChar, tempData+4, txDelayCount);
+    strncpy(txDelayChar, tempData+6, txDelayCount);
     printf("txDelay isolation: %s\n", txDelayChar);
     Util_removeChar(txDelayChar, '0');
+
+    //remove colon
+    Util_removeChar(txDelayChar, ':');
     printf("txDelay remove 0: %s\n", txDelayChar);
 
 
     //add terminating value
     txDelayChar[5] = '\0';
 
+    Log_info1("txDelay value in hex %s", (uintptr_t)txDelayChar);
     printf("after terminating value %s\n", txDelayChar);
 
     uint32_t txDelay = strtol(txDelayChar, 0, 16);
