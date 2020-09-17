@@ -158,10 +158,10 @@ typedef enum {
 
 
 char ownDevAlpha = 'A';
-char ownDevNum = '1';
+char ownDevNum = '3';
 
 char targetDevAlpha = 'A';
-char targetDevNum = '2';
+char targetDevNum = '4';
 
 
 
@@ -607,7 +607,7 @@ static void multi_role_init(void)
 
   //create one-shot clock for timesync based on call from advert data
   Util_constructClock(&clkTimeSync, multi_role_clockHandler, 5000, 0, false, (UArg)&timeSyncClk);
-  Util_constructClock(&clkSecondsSet, multi_role_clockHandler, 1500, 0, false, (UArg)&secondssetClk);
+  Util_constructClock(&clkSecondsSet, multi_role_clockHandler, 1500, 5000, false, (UArg)&secondssetClk);
 
   //create periodic clock for periodic data sync but do not stsart it now
   Util_constructClock(&clkPeriodicData, multi_role_clockHandler, 20000, 0, false, (UArg)&periodicDataClk);
