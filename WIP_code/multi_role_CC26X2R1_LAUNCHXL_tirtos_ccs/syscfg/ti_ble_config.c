@@ -185,7 +185,7 @@ uint8_t advData3[] =
 
    //target device ID information
    'A',
-   '2'
+   '3'
 
 };
 

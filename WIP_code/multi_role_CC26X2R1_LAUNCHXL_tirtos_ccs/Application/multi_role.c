@@ -158,10 +158,10 @@ typedef enum {
 
 
 char ownDevAlpha = 'A';
-char ownDevNum = '1';
+char ownDevNum = '2';
 
 char targetDevAlpha = 'A';
-char targetDevNum = '2';
+char targetDevNum = '3';
 
 
 
@@ -197,7 +197,8 @@ uint32_t ticksPreScan = 0;
 uint32_t ticksPostScan = 0;
 
 
-
+uint32_t originalClockValue = 5000;
+uint32_t combinedTickDelay = 0;
 
 
 //boolean to specify if advertising the time
@@ -1535,11 +1536,11 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
 
           Log_info1("All Data Printout: %s", (uintptr_t)outputData);
 
-          //adjust data to print in uartLog
-
+          //adjust data to print in uartLog - UNUSED ATM
           memcpy(manuToPrint, manuDataOnly, sizeof(manuDataOnly)+1);
           manuToPrint[sizeof(manuDataOnly)+1] = '\0';
 
+          //add received advert report to the struct
           multi_role_addScanInfo(pAdvRpt->addr, pAdvRpt->addrType, pAdvRpt->txPower, pAdvRpt->rssi, pAdvRpt->dataLen, &manuToPrint);
           Log_info1("Received AdvertData: " ANSI_COLOR(FG_GREEN) "%s" ANSI_COLOR(ATTR_RESET),(uintptr_t)manuToPrint);
 
@@ -1552,7 +1553,12 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
 
           //disable advertising once the correct device is being broadcasted
           if (correctDevice) {
+              Log_info0("Correct Device Found");
               GapScan_disable();
+          }
+
+          else {
+              Log_info0("Incorrect Device Found");
           }
 
 
@@ -1732,10 +1738,17 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
      break;
     }
 
+    //simulation for the 10 minute event
     case MR_EVT_PERIODICDATA:
     {
 
         Log_info1("Periodic Data Simulation Value");
+
+        //will run after the initial time sync has run
+
+
+
+
         break;
     }
 
@@ -1778,24 +1791,27 @@ static void multi_role_processAdvEvent(mrGapAdvEventData_t *pEventData)
 
       if ((tickServer==true) && (count<1))
       {
-
+          //get current tick value of clock
           ticksPostAdv = Clock_getTicks();
           Log_info1("ticksPostAdv %d", ticksPostAdv);
 
+          //determine tick difference
           uint32_t ticksDiffAdv = ticksPostAdv - ticksPreAdv;
-          //Log_info1("tickDiffAdv %d", ticksDiffAdv);
 
           //convert diff into hex
-
           char tempTickHexDelay [4];
-
           sprintf(tempTickHexDelay, "%X", ticksDiffAdv);
-
           printf("timeTickHexDelay %s\n", tempTickHexDelay);
+
+
+          //need to include the current clock values in advertising
+          Log_info1("Scan Delay (RX+TX): %d", combinedTickDelay);
+
+          //will later add the combinedTickDelay value to the Tx tick value here and advertise
 
           int increment = 0;
 
-
+          //load advertising handle to update advertising data
           GapAdv_prepareLoadByHandle(advHandleTicks, GAP_ADV_FREE_OPTION_DONT_FREE);
           size_t tempSize = 2;
 
@@ -3348,18 +3364,20 @@ static void multi_role_timeSend(void) {
 static void multi_role_tickSend (void){
     //function to be called when ticks need to be sent
 
-    //disable adv -> start clock -> get ticks -> start adv
-
+    //ensure all other advertising sets are disabled
     GapAdv_disable(advHandle);
     GapAdv_disable(advHandleTime);
     GapAdv_disable(advHandleTicks);
 
+    //Util_startClock(&clkTimeSync);
 
-    Util_startClock(&clkTimeSync);
+    //get preAdv clock time - as advertising starts
     ticksPreAdv = Clock_getTicks();
     Log_info1("ticksPreAdv %d", ticksPreAdv);
 
     tickServer = true;
+
+    //enable advertising
     GapAdv_enable(advHandleTicks, GAP_ADV_ENABLE_OPTIONS_USE_MAX_EVENTS, 1);
     count = 0;
 
@@ -3482,7 +3500,6 @@ static void multi_role_tickIsolation (void) {
 
     printf("after terminating value %s\n", txDelayChar);
 
-
     uint32_t txDelay = strtol(txDelayChar, 0, 16);
 
     Log_info1("Received TX Delay: %d", txDelay);
@@ -3492,21 +3509,24 @@ static void multi_role_tickIsolation (void) {
     ticksPostScan = Clock_getTicks();
     uint32_t ticksDiffScan = ticksPostScan - ticksPreScan;
 
-    uint32_t combinedTickDelay = txDelay + ticksDiffScan;
+    //save the combined delay to a global variable to be used in the advertising phase
+    combinedTickDelay = txDelay + ticksDiffScan;
 
+    //log information for debugging purposes
     Log_info1("Combined Tick Delay: %d", combinedTickDelay);
     Log_info1("current clock ticks: %d", ticksPostScan);
     Log_info1("RX tick diff: %d", ticksDiffScan);
 
 
     //start clock
-    Log_info0("Starting Clocks...");
+    uint32_t startingTimeClock = originalClockValue - combinedTickDelay;
+    Log_info2("Starting Clock with adjustment (%d) to: %d",combinedTickDelay, startingTimeClock);
 
-
-    uint32_t startingTimeClock = 5000-combinedTickDelay;
-    Log_info1("Adjusted clock time delay: %d", startingTimeClock);
-
+    //update the clock period accordingly
     Util_restartClock(&clkTimeSync, startingTimeClock);
+
+    Log_info0("Begin advertising phase of device");
+    multi_role_tickSend();
 
 }//end multi_role_tickIsolation
 
