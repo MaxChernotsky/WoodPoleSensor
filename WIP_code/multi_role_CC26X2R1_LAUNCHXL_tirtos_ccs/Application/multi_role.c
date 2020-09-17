@@ -1809,7 +1809,11 @@ static void multi_role_processAdvEvent(mrGapAdvEventData_t *pEventData)
 
 
           //if first device only
-          combinedTickDelay = 0;
+          if (ownDevNum == '1') {
+              combinedTickDelay = 0;
+          }
+
+
 
           //include the previous delays in the ticksDiffAdv variable
           ticksDiffAdv = ticksDiffAdv + combinedTickDelay;
@@ -3514,6 +3518,7 @@ static void multi_role_tickIsolation (void) {
     Log_info1("txDelay value in hex %s", (uintptr_t)txDelayChar);
     printf("after terminating value %s\n", txDelayChar);
 
+    //set the received delay back to 0 when the device is the first device in the line
     uint32_t txDelay = 0;
     txDelay = strtol(txDelayChar, 0, 16);
 
