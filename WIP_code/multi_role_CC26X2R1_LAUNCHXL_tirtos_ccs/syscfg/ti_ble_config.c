@@ -174,7 +174,7 @@ uint8_t advData3[] =
    LO_UINT16(0xfff0),
    HI_UINT16(0xfff0),
 
-   0x03,
+   0x05,
    GAP_ADTYPE_MANUFACTURER_SPECIFIC,
    //Company Identifier
 
@@ -186,6 +186,35 @@ uint8_t advData3[] =
    //target device ID information
    'A',
    '4'
+
+};
+
+// Advertisement data set 4
+// adv set used for initial device setup
+uint8_t advData4[] =
+{
+   0x03,
+   GAP_ADTYPE_LOCAL_NAME_SHORT,
+   'P',
+   'S',
+
+   0x02,
+   GAP_ADTYPE_FLAGS,
+   GAP_ADTYPE_FLAGS_BREDR_NOT_SUPPORTED | GAP_ADTYPE_FLAGS_GENERAL,
+
+   0x03,
+   GAP_ADTYPE_16BIT_MORE,
+   // More 16-bit - UUID 0
+   LO_UINT16(0xfff0),
+   HI_UINT16(0xfff0),
+
+   0x03,
+   GAP_ADTYPE_MANUFACTURER_SPECIFIC,
+   //Company Identifier
+
+   //current device ID values
+   0x00,
+   0x00
 
 };
 
