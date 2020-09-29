@@ -1557,18 +1557,18 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
       break;
     }
 
+    //processing of incoming advertisement packet
     case MR_EVT_ADV_REPORT:
     {
       GapScan_Evt_AdvRpt_t* pAdvRpt = (GapScan_Evt_AdvRpt_t*) (pMsg->pData);
       Log_info0("In Advertising Report...");
 
+      //unused - code to get the current time of device to be used for comparison
       Seconds_getTime(&ts);
       timePreScan = ts.secs;
       ntimePreScan = ts.nsecs;
-
       ticksPreScan = Clock_getTicks();
       Log_info1("current clock ticks: %d", ticksPreScan);
-
       Log_info1("prescan time: %d", timePreScan);
       Log_info1("prescan ntime: %d", ntimePreScan);
 
@@ -1608,13 +1608,21 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
           if (devState == 1){
 
               //determine if the advertising report is from the correct device
-              bool correctDevice = isCorrectDevice(manuDataOnly, ownDevAlpha, ownDevNum);
+              bool correctDevice = isCorrectDevice(manuDataOnly, ownDevAlpha, ownDevNum, 1); //device = 1 indicates normal operation
+              //bool configDevice = isCorrectDevice(manuDataOnly, ownDevAlpha, ownDevNum, 2) //device = 2 indicates check for configuration device
+
+
+              //determine the advertisement data that will be found in the phone/configuration device
+              //include another statement that will check for the device
+              //normal operation will ensue, following a delayed application event call to connect to the device
 
               //disable advertising once the correct device is being broadcasted
               if (correctDevice) {
                   Log_info0(ANSI_COLOR(FG_GREEN) "Correct Device Found" ANSI_COLOR(ATTR_RESET));
                   GapScan_disable();
               }//end if
+
+
 
               else {
                   Log_info0(ANSI_COLOR(FG_RED) "Incorrect Device Found" ANSI_COLOR(ATTR_RESET));
@@ -1642,12 +1650,8 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
     {
         Log_info0("Scanning has started: Discovering...");
         printf("in scan enabled\n");
-
-        // Disable everything but "Stop Discovering" on the menu
-
-
       break;
-    }
+    }//end scan enabled case
 
     case MR_EVT_SCAN_DISABLED:
     {
@@ -1715,7 +1719,7 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
 
 
       break;
-    }
+    }//end scan disabled case
 
     case MR_EVT_SVC_DISC:
     {
@@ -1798,6 +1802,17 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
     {
         Log_info0("Periodic Data Simulation Value");
         //will run after the initial time sync has run
+
+        break;
+    }
+
+
+    case MR_EVT_INITSETUP:
+    {
+
+        //code process to be implemented when the device is in initialisation mode
+        //flags to be set, etc
+
 
         break;
     }
@@ -3677,7 +3692,7 @@ static void multi_role_initialDeviceDiscovery(void){
 
     //enable scanning for devices
     numScanRes = 0;
-    int initScanDuration = 1000; //in 10 ms
+    int initScanDuration = 1000; //in 10 ms (total 10s)
     GapScan_enable(0, initScanDuration, 0);
 
 }//end multi_role_initialDeviceDiscovery
