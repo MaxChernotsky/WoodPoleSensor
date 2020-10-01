@@ -156,7 +156,7 @@ uint8_t advData2[] =
 };
 
 // Advertisement data set 3
-// adv set used for tick send
+// adv set used for tick send and 10 minute interval
 uint8_t advData3[] =
 {
    0x03,
@@ -185,7 +185,10 @@ uint8_t advData3[] =
 
    //target device ID information
    'A',
-   '4'
+   '3',
+
+   //status byte
+   'N'
 
 };
 

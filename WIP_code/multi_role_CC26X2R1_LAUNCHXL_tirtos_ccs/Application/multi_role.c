@@ -121,6 +121,7 @@ Target Device: cc13x2_26x2
 #define MR_EVT_PERIODICDATA        16 //clock enabled
 
 #define MR_EVT_INITSETUP           17
+#define MR_EVT_SCAN                18
 
 // Internal Events for RTOS application
 #define MR_ICALL_EVT                         ICALL_MSG_EVENT_ID // Event_Id_31
@@ -162,10 +163,10 @@ typedef enum {
 
 
 char ownDevAlpha = 'A';
-char ownDevNum = '3';
+char ownDevNum = '2';
 
 char targetDevAlpha = 'A';
-char targetDevNum = '4';
+char targetDevNum = '3';
 
 char manuToPrint[100];
 
@@ -215,7 +216,7 @@ bool timeServer = false;
 //boolean to specify if advertising the ticks
 bool tickServer = false;
 
-
+bool postAdvScan = false;
 
 
 //Second_Time struct to hold and set the sec, nsecs from the Seconds module
@@ -520,6 +521,9 @@ static void multi_role_tickIsolation(void);
 
 static void multi_role_performIntervalTask(void);
 static void multi_role_initialDeviceDiscovery(void);
+
+bool multi_role_magnetometerSensor(void);
+bool multi_role_accelerometerSensor(void);
 
 /*********************************************************************
  * EXTERN FUNCTIONS
@@ -1713,7 +1717,7 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
           Log_info0("Isolating received ticks:");
 
           //the latest advReport will be the one that matches the value
-          multi_role_tickIsolation();
+          multi_role_tickIsolation(); //change to using an application event rather
 
       }//end for loop for timeClient
 
@@ -1794,6 +1798,8 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
         Seconds_getTime(&ts);
         Log_info2("Seconds: %d, nSecs: %d", ts.secs, ts.nsecs);
 
+        //multi_role_performIntervalTask();
+
      break;
     }
 
@@ -1815,7 +1821,19 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
 
 
         break;
-    }
+    }//end init setup application event
+
+    //application event to enable scanning during 10 minute interval
+    case MR_EVT_SCAN:
+    {
+        //update global flag
+        postAdvScan = true;
+
+        //enable scanning
+        GapScan_enable(0, DEFAULT_SCAN_DURATION, 0);
+
+        break;
+    }//end scan enable application event
 
     default:
       // Do nothing.
@@ -1862,7 +1880,7 @@ static void multi_role_processAdvEvent(mrGapAdvEventData_t *pEventData)
 
 
           //if first device only
-          if (ownDevNum == '1') {
+          if (ownDevNum == '1' && ownDevAlpha == 'A') {
               combinedTickDelay = 0;
           }
 
@@ -3422,15 +3440,12 @@ static void multi_role_timeSend(void) {
         increment = increment+2;
     }//end for loop
 
-
     GapAdv_loadByHandle(advHandleTime, GAP_ADV_DATA_TYPE_ADV, sizeof(advData2), advData2);
 
     Log_info1("Current Time: %d", timePreAdv);
     Log_info1("nanoseconds: %d", ntimePreAdv);
     timeServer = true;
     GapAdv_enable(advHandleTime, GAP_ADV_ENABLE_OPTIONS_USE_MAX_EVENTS, 2);
-
-
 }//end multi_role_timeSend function
 
 static void multi_role_tickSend (void){
@@ -3440,6 +3455,18 @@ static void multi_role_tickSend (void){
     GapAdv_disable(advHandle);
     GapAdv_disable(advHandleTime);
     GapAdv_disable(advHandleTicks);
+
+    GapAdv_prepareLoadByHandle(advHandleTicks, GAP_ADV_FREE_OPTION_DONT_FREE);
+
+    Log_info0("Combined Status: Y");
+    advData3[17] = 'Y';
+
+
+    //include additional cases for when the device status or combination of is not OK (N)
+
+    //update the advertising handle with the new advertising data
+    GapAdv_loadByHandle(advHandleTicks, GAP_ADV_DATA_TYPE_ADV, sizeof(advData3), advData3);
+
 
     Util_restartClock(&clkTimeSync, 5000);
     Util_startClock(&clkTimeSync);
@@ -3454,13 +3481,9 @@ static void multi_role_tickSend (void){
     //enable advertising
     GapAdv_enable(advHandleTicks, GAP_ADV_ENABLE_OPTIONS_USE_MAX_EVENTS, 1);
     count = 0;
-
-
 }//end multi_role_tickSend
 
-
 //function to perfrom timestamp isolation
-
 static void multi_role_timeIsolation(void) {
 
     //for the initial function assume the device broadcasting the timestamp is the initial device in scanList
@@ -3538,20 +3561,19 @@ static void multi_role_timeIsolation(void) {
 
 
 static void multi_role_tickIsolation (void) {
-    //new function to call when doing tick isolation for syncing
+    //new function to call when doing tick isolation for syncing the time
 
     int index = numScanRes;
     //need to isolate the incoming tick tx delay
 
     //variable to temporary hold the manufacturer data to be edited
-    char tempData[10];
+    char tempData[25];
     strcpy(tempData, scanList[index].manuData);
 
     //remove the colon and '0' found in the received data
     Util_removeChar(tempData, ':');
     //Util_removeChar(tempData, '0');
     printf("removed colon value: %s\n", tempData);
-
 
     //isolate the txDelay value
     char txDelayChar[6];
@@ -3567,7 +3589,6 @@ static void multi_role_tickIsolation (void) {
     Util_removeChar(txDelayChar, ':');
     printf("txDelay remove 0: %s\n", txDelayChar);
 
-
     //add terminating value
     txDelayChar[5] = '\0';
 
@@ -3580,6 +3601,12 @@ static void multi_role_tickIsolation (void) {
 
     Log_info1("Received TX Delay: %d", txDelay);
     printf("received tx delay: %d\n", txDelay);
+
+    //perform processing here:
+    multi_role_performIntervalTask();
+
+
+
 
     //tick RX delay calculation
     ticksPostScan = Clock_getTicks();
@@ -3612,17 +3639,74 @@ static void multi_role_performIntervalTask(void) {
     //will be called by the application event
 
     //perform magnetometer sensor readings
-    //perform accelerometer sensor readings
+    bool magSensor = multi_role_magnetometerSensor();
 
-    //enable scanning
+    //perform accelerometer sensor readings
+    bool accSensor = multi_role_accelerometerSensor();
+
+    uint8_t deviceStatus = 0;
+    //determine overall status of device
+    if (magSensor == true && accSensor == true){
+        deviceStatus = 0;
+        Log_info0("Current Device status: Y");
+    }//end if
+
+    else {
+        deviceStatus = 1; //an error occured somewhere
+        Log_info0("Current Device status: N");
+    }//end else
+
     //process incoming advert Report data from devices up the line
 
-    //if status byte shows NOT OK, attempt to form connection
+    //variable to temporary hold the manufacturer data to be edited
+    char tempData[25];
+    strcpy(tempData, scanList[numScanRes-1].manuData);
+
+    //isolate the incoming device(s) status byte from the advertisement report
+    uint8_t incomingStatus = receivedDeviceStatus(tempData);
+
+    if (incomingStatus == 0) {
+        Log_info0("Incoming Device Status: Y");
+    }//end incoming status Y
+
+    else if (incomingStatus == 1) {
+        Log_info0("Incoming Device Status: N");
+
+        //need to determine the method to form connection here to access more information
+
+    }//end incoming status N
+
+    //if first device only
+    if (ownDevNum == '1' && ownDevAlpha == 'A') {
+        incomingStatus = 0;
+    }
+
+    //determined combined status and update advertData
+    uint8_t combinedStatus = incomingStatus + deviceStatus;
+
+    GapAdv_prepareLoadByHandle(advHandleTicks, GAP_ADV_FREE_OPTION_DONT_FREE);
+
+    if (combinedStatus == 0){
+        Log_info0("Combined Status: Y");
+        advData3[17] = 'Y';
+
+    }//end no issues
+
+
+    //include additional cases for when the device status or combination of is not OK (N)
+
+    //update the advertising handle with the new advertising data
+    GapAdv_loadByHandle(advHandleTicks, GAP_ADV_DATA_TYPE_ADV, sizeof(advData3), advData3);
+
+    //enable timer for scan delay in application event
+
+
+    //GapAdv_enable(advHandleInitialDevice, GAP_ADV_ENABLE_OPTIONS_USE_MAX_EVENTS , 1);
 
 
 
-    //compare data
-    //update advertising report
+
+
 
     //begin advertising with new information
 
@@ -3636,6 +3720,19 @@ static void multi_role_performIntervalTask(void) {
 
 }//end multi_role_performIntervalTask
 
+bool multi_role_magnetometerSensor(void){
+    //placeholder for magnetometer sensor function
+    Log_info0("Magnetometer Sensor Check Complete");
+
+    return true;
+}//end multi_role_magnetometerSensor
+
+bool multi_role_accelerometerSensor(void){
+    //placeholder for accelerometer sensor function
+    Log_info0("Accelerometer Sensor Check Complete");
+
+    return true;
+}//end multi_role_accelerometerSensor
 
 static void multi_role_initialDeviceDiscovery(void){
     //function to be called when deviceState = 0;
@@ -3682,7 +3779,7 @@ static void multi_role_initialDeviceDiscovery(void){
     }//end else
 
     //always set to 2 for the tests
-    noCombined = 2;
+    noCombinedDevs = 2;
 
 
     //get every device to advertise and scan in the PHY S8 to show the largest amount of devices around
