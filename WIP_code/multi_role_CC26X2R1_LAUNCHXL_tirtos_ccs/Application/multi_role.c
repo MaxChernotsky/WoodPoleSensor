@@ -368,6 +368,8 @@ static Clock_Struct clkSecondsSet;
 
 static Clock_Struct clkPeriodicData;
 
+static Clock_Struct clkScanStart;
+
 // Memory to pass periodic event to clock handler
 mrClockEventData_t periodicUpdateData =
 {
@@ -396,6 +398,11 @@ mrClockEventData_t periodicDataClk =
  .event = MR_EVT_PERIODICDATA
 };
 
+
+mrClockEventData_t scanStartClk =
+{
+ .event = MR_EVT_SCAN
+};
 
 
 
@@ -642,6 +649,9 @@ static void multi_role_init(void)
 
   //create periodic clock for periodic data sync but do not stsart it now
   Util_constructClock(&clkPeriodicData, multi_role_clockHandler, 20000, 0, false, (UArg)&periodicDataClk);
+
+  //clock timer setup for scan start after advertising
+  Util_constructClock(&clkScanStart, multi_role_clockHandler, 700, 0, false, (UArg)&scanStartClk);
 
 
   // Init key debouncer
@@ -1605,11 +1615,30 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
           Log_info1("Received ManuData: " ANSI_COLOR(FG_GREEN) "%s" ANSI_COLOR(ATTR_RESET),(uintptr_t)manuToPrint);
           multi_role_addScanInfo(pAdvRpt->addr, pAdvRpt->addrType, pAdvRpt->txPower, pAdvRpt->rssi, pAdvRpt->dataLen, &manuToPrint);
 
+
+          //check if the next pole has received the outgoing advert
+          if (postAdvScan == true){
+
+              //need to check if the incoming advert data is from the pole down the line from the current pole
+              bool followingDevice = isFollowingDevice(manuDataOnly, ownDevAlpha, ownDevNum);
+
+              if (followingDevice){
+                  Log_info0("Device down the line received data");
+              }
+
+              else
+                  Log_info0("Device down the line did not receieve data");
+
+
+
+          }//end if postAdvScan
+
+
           //disable scan after finding first device
           //need to alter this to run only when looking for timeServer advData
 
           //normal pole-to-pole 10 min interval operation
-          if (devState == 1){
+          if (devState == 1 && postAdvScan == false){
 
               //determine if the advertising report is from the correct device
               bool correctDevice = isCorrectDevice(manuDataOnly, ownDevAlpha, ownDevNum, 1); //device = 1 indicates normal operation
@@ -1829,8 +1858,9 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
         //update global flag
         postAdvScan = true;
 
+        Log_info0("Application Event SCAN");
         //enable scanning
-        GapScan_enable(0, DEFAULT_SCAN_DURATION, 0);
+        GapScan_enable(0, 0, 0);
 
         break;
     }//end scan enable application event
@@ -2364,6 +2394,11 @@ static void multi_role_clockHandler(UArg arg)
   {
       multi_role_enqueueMsg(MR_EVT_PERIODICDATA, NULL);
   }
+  else if (pData->event == MR_EVT_SCAN)
+  {
+      multi_role_enqueueMsg(MR_EVT_SCAN, NULL);
+  }
+
 
 }//end multi_role_clockHandler
 
@@ -3638,6 +3673,8 @@ static void multi_role_performIntervalTask(void) {
     //function to perform tasks to be run at 10min intervals
     //will be called by the application event
 
+    postAdvScan = false;
+
     //perform magnetometer sensor readings
     bool magSensor = multi_role_magnetometerSensor();
 
@@ -3699,7 +3736,7 @@ static void multi_role_performIntervalTask(void) {
     GapAdv_loadByHandle(advHandleTicks, GAP_ADV_DATA_TYPE_ADV, sizeof(advData3), advData3);
 
     //enable timer for scan delay in application event
-
+    Util_restartClock(&clkScanStart, 0);
 
     //GapAdv_enable(advHandleInitialDevice, GAP_ADV_ENABLE_OPTIONS_USE_MAX_EVENTS , 1);
 
