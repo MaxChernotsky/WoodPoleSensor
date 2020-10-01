@@ -174,7 +174,7 @@ uint8_t advData3[] =
    LO_UINT16(0xfff0),
    HI_UINT16(0xfff0),
 
-   0x05,
+   0x06,
    GAP_ADTYPE_MANUFACTURER_SPECIFIC,
    //Company Identifier
 
@@ -185,7 +185,7 @@ uint8_t advData3[] =
 
    //target device ID information
    'A',
-   '3',
+   '2',
 
    //status byte
    'N'
