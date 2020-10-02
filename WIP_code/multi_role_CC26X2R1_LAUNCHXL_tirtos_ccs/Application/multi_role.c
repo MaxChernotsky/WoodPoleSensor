@@ -645,7 +645,7 @@ static void multi_role_init(void)
 
   //create one-shot clock for timesync based on call from advert data
   Util_constructClock(&clkTimeSync, multi_role_clockHandler, 5000, 0, false, (UArg)&timeSyncClk);
-  Util_constructClock(&clkSecondsSet, multi_role_clockHandler, 500, 5000, false, (UArg)&secondssetClk);
+  Util_constructClock(&clkSecondsSet, multi_role_clockHandler, 15000, 0, false, (UArg)&secondssetClk);
 
   //create periodic clock for periodic data sync but do not stsart it now
   Util_constructClock(&clkPeriodicData, multi_role_clockHandler, 20000, 0, false, (UArg)&periodicDataClk);
@@ -1833,6 +1833,7 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
 
     case MR_EVT_SECONDSSET:
     {
+        Util_startClock(&clkSecondsSet);
         //called periodically
         Seconds_getTime(&ts);
         Log_info0("------------------------------------");
@@ -1845,7 +1846,7 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
         else {
             Log_info0("In else...");
             timeClient = true;
-            multi_role_doDiscoverDevices();
+            //multi_role_doDiscoverDevices();
         }//end else
 
 
@@ -3528,7 +3529,7 @@ static void multi_role_tickSend (void){
     GapAdv_loadByHandle(advHandleTicks, GAP_ADV_DATA_TYPE_ADV, sizeof(advData3), advData3);
 
 
-    //Util_restartClock(&clkTimeSync, 5000);
+    Util_restartClock(&clkTimeSync, 5000);
     Util_startClock(&clkTimeSync);
 
     //get preAdv clock time - as advertising starts
