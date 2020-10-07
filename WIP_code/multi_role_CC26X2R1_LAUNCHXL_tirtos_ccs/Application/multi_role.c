@@ -163,10 +163,10 @@ typedef enum {
 
 
 char ownDevAlpha = 'A';
-char ownDevNum = '1';
+char ownDevNum = '2';
 
 char targetDevAlpha = 'A';
-char targetDevNum = '2';
+char targetDevNum = '3';
 
 char manuToPrint[100];
 
@@ -218,17 +218,18 @@ bool tickServer = false;
 
 bool postAdvScan = false;
 
+bool correctDevice = false;
+
 
 //Second_Time struct to hold and set the sec, nsecs from the Seconds module
 Seconds_Time ts;
 
-//global variable to count the number of iterations in detemrining the accruate time difference
+//global variable to count the number of iterations in determining the accurate time difference
 int count = 0;
 
 //variable to be used to isolate the parameters needed to set the time accurately
 bool timeClient = false;
-
-
+bool timerStarted = false;
 
 //custom struct to hold the surrounding devices information
 typedef struct {
@@ -628,8 +629,7 @@ static void multi_role_init(void)
 
   //output current device data
   //Log_info1("Channel: %d", ownChannel);
-  Log_info0("Current Device ID shown in ASCII:");
-  Log_info2("Current Device ID (alpha, num): %d, %d", (int)ownDevAlpha, (int)ownDevNum);
+  Log_info2("Current Device ID in ASCII (alpha, num): %d, %d", (int)ownDevAlpha, (int)ownDevNum);
 
 
 
@@ -963,7 +963,6 @@ static void multi_role_processGapMsg(gapEventHdr_t *pMsg)
     {
       gapDeviceInitDoneEvent_t *pPkt = (gapDeviceInitDoneEvent_t *)pMsg;
       Log_info0("Ready to process GAP functions");
-      printf("Hello\n");
       BLE_LOG_INT_TIME(0, BLE_LOG_MODULE_APP, "APP : ---- got GAP_DEVICE_INIT_DONE_EVENT", 0);
       if(pPkt->hdr.status == SUCCESS)
       {
@@ -1585,7 +1584,7 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
       //Log_info1("prescan ntime: %d", ntimePreScan);
 
       ticksPreScan = Clock_getTicks();
-      //Log_info1("current clock ticks: %d", ticksPreScan);
+      Log_info1("current clock ticks: %d", ticksPreScan);
 
 
 
@@ -1620,7 +1619,7 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
 
           //check if the next pole has received the outgoing advert
           if (postAdvScan == true){
-
+              Log_info0("Checking if next pole has received the data...");
               //need to check if the incoming advert data is from the pole down the line from the current pole
               bool followingDevice = isFollowingDevice(manuDataOnly, ownDevAlpha, ownDevNum);
 
@@ -1649,7 +1648,7 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
           if (devState == 1 && postAdvScan == false){
 
               //determine if the advertising report is from the correct device
-              bool correctDevice = isCorrectDevice(manuDataOnly, ownDevAlpha, ownDevNum, 1); //device = 1 indicates normal operation
+              correctDevice = isCorrectDevice(manuDataOnly, ownDevAlpha, ownDevNum, 1); //device = 1 indicates normal operation
               //bool configDevice = isCorrectDevice(manuDataOnly, ownDevAlpha, ownDevNum, 2) //device = 2 indicates check for configuration device
 
 
@@ -1689,7 +1688,7 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
 
     case MR_EVT_SCAN_ENABLED:
     {
-        Log_info0("Scanning has started: Discovering...");
+        Log_info0(ANSI_COLOR(FG_GREEN) "Scanning Started" ANSI_COLOR(ATTR_RESET));
         printf("in scan enabled\n");
       break;
     }//end scan enabled case
@@ -1701,7 +1700,7 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
       static uint8_t* pAddrs = NULL;
       uint8_t* pAddrTemp;
 
-      Log_info0("Scan Disabled");
+      Log_info0(ANSI_COLOR(FG_RED) "Scanning Disabled" ANSI_COLOR(ATTR_RESET));
 
 #if (DEFAULT_DEV_DISC_BY_SVC_UUID == TRUE)
       numReport = numScanRes;
@@ -1751,9 +1750,9 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
 
       //will run when timeClient is needed
       //will isolate the time and delay from the advertData
-      if (timeClient){
+      if (timeClient && correctDevice == true){
 
-          Log_info0("Tick Isolation --------------------");
+
 
           //the latest advReport will be the one that matches the value
           multi_role_tickIsolation(); //change to using an application event rather
@@ -1825,28 +1824,34 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
     case MR_EVT_TIMESYNC:
     {
         //when the timesync event has been called, print to screen
+        Log_info0("------------------------------------");
         Log_info0("TimeSync successfully called");
+        Log_info0("------------------------------------");
         Seconds_set(1599767013);
         Util_startClock(&clkSecondsSet);
         break;
     }
 
+    //function that will be used to perform time sensitive tasks
     case MR_EVT_SECONDSSET:
     {
-        Util_startClock(&clkSecondsSet);
         //called periodically
+        timerStarted = true;
+        correctDevice = false;
+        Util_startClock(&clkSecondsSet);
         Seconds_getTime(&ts);
-        Log_info0("------------------------------------");
-        Log_info2("Seconds: %d, nSecs: %d", ts.secs, ts.nsecs);
+
+        Log_info2(ANSI_COLOR(FG_GREEN) "Seconds: %d, nSecs: %d:" ANSI_COLOR(ATTR_RESET), ts.secs, ts.nsecs);
+
 
         if (ownDevNum == '1' && ownDevAlpha == 'A'){
             multi_role_tickSend();
         }//end if
 
         else {
-            Log_info0("In else...");
+            //Log_info0("In else...");
             timeClient = true;
-            //multi_role_doDiscoverDevices();
+            multi_role_doDiscoverDevices();
         }//end else
 
 
@@ -1856,6 +1861,7 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
     }
 
     //simulation for the 10 minute event
+    //function that will be called after a certain amount of seconds to establish a connection
     case MR_EVT_PERIODICDATA:
     {
         Log_info0("Periodic Data Simulation Value");
@@ -1883,7 +1889,7 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
 
         Log_info0("Application Event SCAN");
         //enable scanning
-        GapScan_enable(0, 0, 0);
+        GapScan_enable(0, 50, 0);
 
         break;
     }//end scan enable application event
@@ -1918,7 +1924,7 @@ static void multi_role_processAdvEvent(mrGapAdvEventData_t *pEventData)
       //Display_printf(dispHandle, MR_ROW_ADVERTIS, 0, "Adv Set %d Enabled",*(uint8_t *)(pEventData->pBuf));
       Log_info1("Adv Set %d Enabled", *(uint8_t *)(pEventData->pBuf));
 
-      if ((tickServer==true) && (count<1))
+      if ((tickServer==true) && (count<3))
       {
           //get current tick value of clock
           ticksPostAdv = Clock_getTicks();
@@ -1933,7 +1939,7 @@ static void multi_role_processAdvEvent(mrGapAdvEventData_t *pEventData)
 
 
           Log_info3("Previous TX+RX (%d) + current TX (%d) = %d", combinedTickDelay, ticksDiffAdv, ticksDiffAdv+combinedTickDelay);
-
+          Log_info0("------------------------------------");
           //if first device only
           if (ownDevNum == '1' && ownDevAlpha == 'A') {
               combinedTickDelay = 0;
@@ -2177,7 +2183,7 @@ static void multi_role_addScanInfo(uint8_t *pAddr, uint8_t addrType, uint8_t txP
     }//end if
     devState = 1;
 
-    Log_info4(ANSI_COLOR(FG_BLUE) "Dev No: %d" ANSI_COLOR(ATTR_RESET)  ", txPower: %d, rssi %d, BT ADDR: " ANSI_COLOR(FG_GREEN) "%s" ANSI_COLOR(ATTR_RESET), numScanRes+1, txPower, rssi, (uintptr_t)Util_convertBdAddr2Str(pAddr));
+    Log_info4(ANSI_COLOR(FG_BLUE) "Dev No: %d" ANSI_COLOR(ATTR_RESET)  ", txPower: %d, rssi %d, BT ADDR: " ANSI_COLOR(FG_GREEN) "%s" ANSI_COLOR(ATTR_RESET), numScanRes, txPower, rssi, (uintptr_t)Util_convertBdAddr2Str(pAddr));
 
     // Increment scan result count
     numScanRes++;
@@ -2470,6 +2476,7 @@ static void multi_role_handleKeys(uint8_t keys)
         //multi_role_serviceDiscovery(0);
         Log_info0("Left Button Press");
 
+        timerStarted = false;
         timeClient = true;
         GapAdv_disable(advHandle);
         GapAdv_disable(advHandleTicks);
@@ -2488,6 +2495,7 @@ static void multi_role_handleKeys(uint8_t keys)
     {
       //right button handler
       //multi_role_doConnect(0);
+        timerStarted = false;
         multi_role_tickSend();
 
     }
@@ -3529,9 +3537,10 @@ static void multi_role_tickSend (void){
     GapAdv_loadByHandle(advHandleTicks, GAP_ADV_DATA_TYPE_ADV, sizeof(advData3), advData3);
 
 
-    Util_restartClock(&clkTimeSync, 5000);
-    Util_startClock(&clkTimeSync);
-
+    if (timerStarted != true){
+        Util_restartClock(&clkTimeSync, 5000);
+        Util_startClock(&clkTimeSync);
+    }
     //get preAdv clock time - as advertising starts
     ticksPreAdv = Clock_getTicks();
     //Log_info1("ticksPreAdv %d", ticksPreAdv);
@@ -3624,12 +3633,14 @@ static void multi_role_timeIsolation(void) {
 static void multi_role_tickIsolation (void) {
     //new function to call when doing tick isolation for syncing the time
 
+    Log_info0("Tick Isolation --------------------");
+
     int index = numScanRes-1;
     //need to isolate the incoming tick tx delay
 
     //variable to temporary hold the manufacturer data to be edited
     char tempData[25];
-    strcpy(tempData, scanList[numScanRes-1].manuData);
+    strcpy(tempData, scanList[index].manuData);
 
 
     //2nd method (better method)
@@ -3638,7 +3649,7 @@ static void multi_role_tickIsolation (void) {
     char second[5];
     //char combined[10];
     long int firstInt = 0;
-    long int secondInt = 0;
+    //long int secondInt = 0;
 
     strncpy(first, tempData+6, byteSize);
     strncpy(second, tempData+9, byteSize);
@@ -3662,6 +3673,7 @@ static void multi_role_tickIsolation (void) {
     ticksPostScan = Clock_getTicks();
     uint32_t ticksDiffScan = ticksPostScan - ticksPreScan;
     Log_info1("RX Delay: %d", ticksDiffScan);
+    Log_info2("prescan (%d) --- postscan (%d)",  ticksPreScan, ticksPostScan);
 
     //save the combined delay to a global variable to be used in the advertising phase
     combinedTickDelay = txDelay + ticksDiffScan;
@@ -3670,6 +3682,7 @@ static void multi_role_tickIsolation (void) {
     Log_info1("Combined Delay: %d", combinedTickDelay);
     //Log_info1("current clock ticks: %d", ticksPostScan);
 
+    Log_info3("TX (%d) + RX (%d) = Combined (%d)", txDelay, ticksDiffScan, combinedTickDelay);
 
 
     //start clock
@@ -3683,8 +3696,8 @@ static void multi_role_tickIsolation (void) {
     //perform processing here:
     multi_role_performIntervalTask();
 
-
-    Log_info0("Begin advertising phase of device");
+    Log_info0("Advertising: --------------------");
+    //Log_info0("Begin advertising phase of device");
     multi_role_tickSend();
 
 }//end multi_role_tickIsolation
