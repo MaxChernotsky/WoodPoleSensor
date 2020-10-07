@@ -163,10 +163,10 @@ typedef enum {
 
 
 char ownDevAlpha = 'A';
-char ownDevNum = '2';
+char ownDevNum = '3';
 
 char targetDevAlpha = 'A';
-char targetDevNum = '3';
+char targetDevNum = '4';
 
 char manuToPrint[100];
 
@@ -648,10 +648,13 @@ static void multi_role_init(void)
   Util_constructClock(&clkSecondsSet, multi_role_clockHandler, 15000, 0, false, (UArg)&secondssetClk);
 
   //create periodic clock for periodic data sync but do not stsart it now
-  Util_constructClock(&clkPeriodicData, multi_role_clockHandler, 20000, 0, false, (UArg)&periodicDataClk);
+  Util_constructClock(&clkPeriodicData, multi_role_clockHandler, 300, 0, false, (UArg)&periodicDataClk);
 
   //clock timer setup for scan start after advertising
   Util_constructClock(&clkScanStart, multi_role_clockHandler, 700, 0, false, (UArg)&scanStartClk);
+
+
+
 
 
   // Init key debouncer
@@ -1841,11 +1844,13 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
         Util_startClock(&clkSecondsSet);
         Seconds_getTime(&ts);
 
+        //Util_startClock(&clkPeriodicData);
         Log_info2(ANSI_COLOR(FG_GREEN) "Seconds: %d, nSecs: %d:" ANSI_COLOR(ATTR_RESET), ts.secs, ts.nsecs);
 
 
         if (ownDevNum == '1' && ownDevAlpha == 'A'){
-            multi_role_tickSend();
+            //multi_role_tickSend();
+            Util_startClock(&clkPeriodicData);
         }//end if
 
         else {
@@ -1864,7 +1869,8 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
     //function that will be called after a certain amount of seconds to establish a connection
     case MR_EVT_PERIODICDATA:
     {
-        Log_info0("Periodic Data Simulation Value");
+        Log_info0("Begin Advertising here...");
+        multi_role_tickSend();
         //will run after the initial time sync has run
 
         break;
@@ -3520,6 +3526,8 @@ static void multi_role_timeSend(void) {
 static void multi_role_tickSend (void){
     //function to be called when ticks need to be sent
 
+    Log_info0("TICKSEND -------------------------");
+
     //ensure all other advertising sets are disabled
     GapAdv_disable(advHandle);
     GapAdv_disable(advHandleTime);
@@ -3537,7 +3545,8 @@ static void multi_role_tickSend (void){
     GapAdv_loadByHandle(advHandleTicks, GAP_ADV_DATA_TYPE_ADV, sizeof(advData3), advData3);
 
 
-    if (timerStarted != true){
+    if (timerStarted == false){
+        Log_info0("starting TimeSync");
         Util_restartClock(&clkTimeSync, 5000);
         Util_startClock(&clkTimeSync);
     }
@@ -3689,8 +3698,14 @@ static void multi_role_tickIsolation (void) {
     uint32_t startingTimeClock = originalClockValue - combinedTickDelay;
     Log_info2("Starting Clock with adjustment (%d) to: %d",combinedTickDelay, startingTimeClock);
 
-    //update the clock period accordingly
-    Util_restartClock(&clkTimeSync, startingTimeClock);
+
+    if (timerStarted == false) {
+        //update the clock period accordingly
+        Util_restartClock(&clkTimeSync, startingTimeClock);
+    }//end if
+
+
+
 
 
     //perform processing here:
@@ -3698,6 +3713,8 @@ static void multi_role_tickIsolation (void) {
 
     Log_info0("Advertising: --------------------");
     //Log_info0("Begin advertising phase of device");
+
+    //function to call this after set time...
     multi_role_tickSend();
 
 }//end multi_role_tickIsolation
