@@ -169,8 +169,6 @@ char ownDevNum = '1';
 char targetDevAlpha = 'X';
 char targetDevNum = 'X';
 
-//char targetDevAlpha[3];
-//char targetDevNum[3];
 
 char manuToPrint[100];
 
@@ -178,6 +176,8 @@ char manuToPrint[100];
 // 0 - initial state
 // 1 - standard operation state
 int devState = 0;
+
+
 int noDevUpline = 0; //device closest to A1
 int noDevDownline = 0; //device closest to Z9
 int noCombinedDevs = 0;
@@ -640,13 +640,10 @@ static void multi_role_init(void)
   Log_info0("Board Booting up...");
 
 
-  //output current device data
-  //Log_info1("Channel: %d", ownChannel);
   Log_info2("Current Device ID in ASCII (alpha, num): %d, %d", (int)ownDevAlpha, (int)ownDevNum);
 
 
-
-  //initialise Clocks
+  //-----// CLOCK INITIALISATION //-----//
 
   // Create an RTOS queue for message from profile to be sent to app.
   appMsgQueue = Util_constructQueue(&appMsg);
@@ -1019,8 +1016,10 @@ static void multi_role_processGapMsg(gapEventHdr_t *pMsg)
       //Setup scanning
       multi_role_scanInit();
 
-      devState = 0;
 
+      //-----// DEVICE INITIALISATION SETUP //-----//
+
+      devState = 0;
 
       if (devState == 0){
           Log_info0(ANSI_COLOR(FG_GREEN) "Device Status: Initialisation State" ANSI_COLOR(ATTR_RESET));
@@ -1033,20 +1032,8 @@ static void multi_role_processGapMsg(gapEventHdr_t *pMsg)
           multi_role_initialDeviceDiscovery();
       }//end if statement
 
-
-
-      //enable scanning indefinitely
-      //numScanRes = 0;
-      //GapScan_enable(0, 200, 0);
-      //timeClient = true;
-
-
       mrMaxPduSize = pPkt->dataPktLen;
 
-
-      //Display initialized state status
-      //Display_printf(dispHandle, MR_ROW_NUM_CONN, 0, "Num Conns: %d", numConn);
-      //Display_printf(dispHandle, MR_ROW_NON_CONN, 0, "Initialized");
       //Display_printf(dispHandle, MR_ROW_MYADDRSS, 0, "Multi-Role Address: %s",(char *)Util_convertBdAddr2Str(pPkt->devAddr));
 
       Log_info1("Multi-Role Address: %s", (uintptr_t)(char *)Util_convertBdAddr2Str(pPkt->devAddr));
@@ -1055,12 +1042,7 @@ static void multi_role_processGapMsg(gapEventHdr_t *pMsg)
 
     case GAP_CONNECTING_CANCELLED_EVENT:
     {
-
-
         Log_info0("Connection attempt cancelled");
-      //Display_printf(dispHandle, MR_ROW_NON_CONN, 0, "Conneting attempt cancelled");
-
-
       break;
     }
 
@@ -1290,11 +1272,12 @@ static void multi_role_scanInit(void)
 */
 static void multi_role_advertInit(void)
 {
-  uint8_t status = FAILURE;
+    uint8_t status = FAILURE;
   // Setup and start Advertising
   // For more information, see the GAP section in the User's Guide:
   // http://software-dl.ti.com/lprf/ble5stack-latest/
 
+  //-----// ADVERTISING SET 1 - UNUSED ATM //-----//
 
   BLE_LOG_INT_INT(0, BLE_LOG_MODULE_APP, "APP : ---- call GapAdv_create set=%d,%d\n", 1, 0);
   // Create Advertisement set #1 and assign handle
@@ -1317,8 +1300,7 @@ static void multi_role_advertInit(void)
 
   // Enable legacy advertising for set #1
   status = GapAdv_enable(advHandle, GAP_ADV_ENABLE_OPTIONS_USE_MAX , 0);
-
-  //setup advertisement set 2
+  //-----// ADVERTISING SET 2 - TIME SYNC (UNUSED) //-----//
 
     BLE_LOG_INT_INT(0, BLE_LOG_MODULE_APP, "APP : ---- call GapAdv_create set=%d,%d\n", 2, 0);
 
@@ -1339,53 +1321,48 @@ static void multi_role_advertInit(void)
     // Enable legacy advertising for set #2
     status = GapAdv_enable(advHandleTime, GAP_ADV_ENABLE_OPTIONS_USE_MAX , 0);
 
+    //-----// ADVERTISING SET 3 - 10 MINUTE INTERVAL //-----//
+
     BLE_LOG_INT_INT(0, BLE_LOG_MODULE_APP, "APP : ---- call GapAdv_create set=%d,%d\n", 3, 0);
 
-
-    // Create Advertisement set #2 and assign handle
+    // Create Advertisement set #3 and assign handle
     status = GapAdv_create(&multi_role_advCB, &advParams1, &advHandleTicks);
 
-    // Load advertising data for set #2 that is statically allocated by the app
+    // Load advertising data for set #3 that is statically allocated by the app
     status = GapAdv_loadByHandle(advHandleTicks, GAP_ADV_DATA_TYPE_ADV, sizeof(advData3), advData3);
 
-    // Set event mask for set #2
+    // Set event mask for set #3
     GapAdv_setEventMask(advHandleTicks,
                         GAP_ADV_EVT_MASK_START_AFTER_ENABLE |
                         GAP_ADV_EVT_MASK_END_AFTER_DISABLE |
                         GAP_ADV_EVT_MASK_SET_TERMINATED);
 
     BLE_LOG_INT_TIME(0, BLE_LOG_MODULE_APP, "APP : ---- GapAdv_enable", 0);
-    // Enable legacy advertising for set #2
+    // Enable legacy advertising for set #3
     status = GapAdv_enable(advHandleTicks, GAP_ADV_ENABLE_OPTIONS_USE_MAX , 0);
 
-//advertising set 4
+    //-----// ADVERTISING SET 4 - INITIALISATION //-----//
+
     BLE_LOG_INT_INT(0, BLE_LOG_MODULE_APP, "APP : ---- call GapAdv_create set=%d,%d\n", 4, 0);
 
 
-    // Create Advertisement set #2 and assign handle
+    // Create Advertisement set #4 and assign handle
     status = GapAdv_create(&multi_role_advCB, &advParams1, &advHandleInitialDevice);
 
-    // Load advertising data for set #2 that is statically allocated by the app
+    // Load advertising data for set #4 that is statically allocated by the app
     status = GapAdv_loadByHandle(advHandleInitialDevice, GAP_ADV_DATA_TYPE_ADV, sizeof(advData4), advData4);
 
-    // Set event mask for set #2
+    // Set event mask for set #4
     GapAdv_setEventMask(advHandleInitialDevice,
                         GAP_ADV_EVT_MASK_START_AFTER_ENABLE |
                         GAP_ADV_EVT_MASK_END_AFTER_DISABLE |
                         GAP_ADV_EVT_MASK_SET_TERMINATED);
 
     BLE_LOG_INT_TIME(0, BLE_LOG_MODULE_APP, "APP : ---- GapAdv_enable", 0);
-    // Enable legacy advertising for set #2
+    // Enable legacy advertising for set #4
     status = GapAdv_enable(advHandleInitialDevice, GAP_ADV_ENABLE_OPTIONS_USE_MAX , 0);
 
-
-
-
     Log_info0("Initialise Advertising...");
-
-
-
-
 
   if(status != SUCCESS)
   {
@@ -1790,15 +1767,8 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
       if (devState == 0){
           //isolate the saved information from the struct
 
-          //Log_info1("FirstDevAlpha: %d", surroundingDevs[0].devAlpha);
-          //Log_info1("FirstDevNum: %d", surroundingDevs[0].devNum);
-
-
           //GapAdv_disable(advHandleInitialDevice);
           multi_role_determineSurroundingDevices(numReport);
-
-
-
       }//end if
 
 
@@ -2019,7 +1989,6 @@ static void multi_role_processAdvEvent(mrGapAdvEventData_t *pEventData)
           if (ownDevNum == '1' && ownDevAlpha == 'A') {
               combinedTickDelay = 0;
           }
-
 
           //include the previous delays in the ticksDiffAdv variable
           ticksDiffAdv = ticksDiffAdv + combinedTickDelay;
