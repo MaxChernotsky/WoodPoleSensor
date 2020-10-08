@@ -120,7 +120,7 @@ Target Device: cc13x2_26x2
 #define MR_EVT_SECONDSSET          15 //clock enabled
 #define MR_EVT_PERIODICDATA        16 //clock enabled
 
-#define MR_EVT_INITSETUP           17
+#define MR_EVT_POSTINITSETUP       17
 #define MR_EVT_SCAN                18
 
 // Internal Events for RTOS application
@@ -163,10 +163,14 @@ typedef enum {
 
 
 char ownDevAlpha = 'A';
-char ownDevNum = '3';
+char ownDevNum = '1';
 
-char targetDevAlpha = 'A';
-char targetDevNum = '4';
+//placeholders...
+char targetDevAlpha = 'X';
+char targetDevNum = 'X';
+
+//char targetDevAlpha[3];
+//char targetDevNum[3];
 
 char manuToPrint[100];
 
@@ -220,6 +224,11 @@ bool postAdvScan = false;
 
 bool correctDevice = false;
 
+//calculate after surrounding devices initialisation scan is done
+int noUpDevs = 0;
+int noDownDevs = 0;
+
+
 
 //Second_Time struct to hold and set the sec, nsecs from the Seconds module
 Seconds_Time ts;
@@ -233,8 +242,8 @@ bool timerStarted = false;
 
 //custom struct to hold the surrounding devices information
 typedef struct {
-    uint8_t devAlpha;
-    uint8_t devNum;
+    long int devAlpha;
+    long int devNum;
     uint8_t txPower;
 }PoleDev_surrDevs;
 
@@ -429,6 +438,7 @@ static uint16 mrMaxPduSize;
 #if (DEFAULT_DEV_DISC_BY_SVC_UUID == TRUE)
 // Number of scan results filtered by Service UUID
 static uint8_t numScanRes = 0;
+static uint8_t numSurroundingScanRes = 0;
 
 // Scan results filtered by Service UUID
 static scanRec_t scanList[DEFAULT_MAX_SCAN_RES];
@@ -532,6 +542,9 @@ static void multi_role_initialDeviceDiscovery(void);
 
 bool multi_role_magnetometerSensor(void);
 bool multi_role_accelerometerSensor(void);
+
+static void multi_role_determineSurroundingDevices(int numFound);
+static void multi_role_addSurroundingScanInfo(uint8_t txPower, char *receivedData);
 
 /*********************************************************************
  * EXTERN FUNCTIONS
@@ -1006,11 +1019,17 @@ static void multi_role_processGapMsg(gapEventHdr_t *pMsg)
       //Setup scanning
       multi_role_scanInit();
 
-      devState = 1;
+      devState = 0;
 
 
       if (devState == 0){
           Log_info0(ANSI_COLOR(FG_GREEN) "Device Status: Initialisation State" ANSI_COLOR(ATTR_RESET));
+
+          //enable scanning
+          numScanRes = 0;
+          GapScan_enable(0, 0, 0);
+
+          //update advert data and enable advertising
           multi_role_initialDeviceDiscovery();
       }//end if statement
 
@@ -1587,7 +1606,7 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
       //Log_info1("prescan ntime: %d", ntimePreScan);
 
       ticksPreScan = Clock_getTicks();
-      Log_info1("current clock ticks: %d", ticksPreScan);
+      //Log_info1("current clock ticks: %d", ticksPreScan);
 
 
 
@@ -1620,6 +1639,10 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
           multi_role_addScanInfo(pAdvRpt->addr, pAdvRpt->addrType, pAdvRpt->txPower, pAdvRpt->rssi, pAdvRpt->dataLen, &manuToPrint);
 
 
+          /*
+           * NOT WORKING ATM
+           */
+
           //check if the next pole has received the outgoing advert
           if (postAdvScan == true){
               Log_info0("Checking if next pole has received the data...");
@@ -1636,16 +1659,23 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
                   GapScan_disable();
 
                   //need to develop code to adjust the target device a second attempt
-
               }//end else
-
-
-
           }//end if postAdvScan
 
+          if (devState == 0){
 
-          //disable scan after finding first device
-          //need to alter this to run only when looking for timeServer advData
+              //function here to determine if the received data is an initial device first
+
+
+              if (pAdvRpt->dataLen == 15){
+                  Log_info0("Initial: Device Found");
+
+                  multi_role_addSurroundingScanInfo(pAdvRpt->txPower, &manuToPrint);
+                  GapScan_disable();
+              }//if the correct device found
+
+
+          }//end if
 
           //normal pole-to-pole 10 min interval operation
           if (devState == 1 && postAdvScan == false){
@@ -1665,12 +1695,9 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
                   GapScan_disable();
               }//end if
 
-
-
               else {
                   Log_info0(ANSI_COLOR(FG_RED) "Incorrect Device Found" ANSI_COLOR(ATTR_RESET));
               }//end else
-
           }//end if for devState==1
 
 
@@ -1755,12 +1782,24 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
       //will isolate the time and delay from the advertData
       if (timeClient && correctDevice == true){
 
-
-
           //the latest advReport will be the one that matches the value
           multi_role_tickIsolation(); //change to using an application event rather
-
       }//end for loop for timeClient
+
+
+      if (devState == 0){
+          //isolate the saved information from the struct
+
+          //Log_info1("FirstDevAlpha: %d", surroundingDevs[0].devAlpha);
+          //Log_info1("FirstDevNum: %d", surroundingDevs[0].devNum);
+
+
+          //GapAdv_disable(advHandleInitialDevice);
+          multi_role_determineSurroundingDevices(numReport);
+
+
+
+      }//end if
 
 
       break;
@@ -1830,6 +1869,7 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
         Log_info0("------------------------------------");
         Log_info0("TimeSync successfully called");
         Log_info0("------------------------------------");
+        GapAdv_disable(advHandleInitialDevice);
         Seconds_set(1599767013);
         Util_startClock(&clkSecondsSet);
         break;
@@ -1841,6 +1881,7 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
         //called periodically
         timerStarted = true;
         correctDevice = false;
+        postAdvScan = false;
         Util_startClock(&clkSecondsSet);
         Seconds_getTime(&ts);
 
@@ -1850,7 +1891,7 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
 
         if (ownDevNum == '1' && ownDevAlpha == 'A'){
             //multi_role_tickSend();
-            Util_startClock(&clkPeriodicData);
+            Util_restartClock(&clkPeriodicData, 300);
         }//end if
 
         else {
@@ -1877,11 +1918,39 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
     }
 
 
-    case MR_EVT_INITSETUP:
+    case MR_EVT_POSTINITSETUP:
     {
+        //application event to be done after successful surrounding devices found
 
-        //code process to be implemented when the device is in initialisation mode
-        //flags to be set, etc
+        //disable initialisation mode
+        devState = 1;
+
+
+        //disable all advertising
+        GapAdv_disable(advHandle);
+        GapAdv_disable(advHandleTicks);
+        GapAdv_disable(advHandleTime);
+        //GapAdv_disable(advHandleInitialDevice);
+
+        //disable scanning if enabled
+        GapScan_disable();
+
+        Log_info2("Up = %d, devState = %d", noUpDevs, devState);
+        //if first device
+        if (noUpDevs == 0) {
+            timerStarted = false;
+            //multi_role_tickSend();
+            Util_restartClock(&clkPeriodicData, 5000);
+        }//end if
+
+        //if any other device
+        else {
+            timerStarted = false;
+            timeClient = true;
+            postAdvScan = false;
+            GapScan_enable(0, 0, 0);
+            //multi_role_doDiscoverDevices();
+        }//end else
 
 
         break;
@@ -1891,11 +1960,11 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
     case MR_EVT_SCAN:
     {
         //update global flag
-        postAdvScan = false;
+        postAdvScan = true;
 
         Log_info0("Application Event SCAN");
         //enable scanning
-        GapScan_enable(0, 50, 0);
+        GapScan_enable(0, DEFAULT_SCAN_DURATION, 0);
 
         break;
     }//end scan enable application event
@@ -1930,7 +1999,7 @@ static void multi_role_processAdvEvent(mrGapAdvEventData_t *pEventData)
       //Display_printf(dispHandle, MR_ROW_ADVERTIS, 0, "Adv Set %d Enabled",*(uint8_t *)(pEventData->pBuf));
       Log_info1("Adv Set %d Enabled", *(uint8_t *)(pEventData->pBuf));
 
-      if ((tickServer==true) && (count<3))
+      if ((tickServer==true) && (count<1))
       {
           //get current tick value of clock
           ticksPostAdv = Clock_getTicks();
@@ -2178,23 +2247,24 @@ static void multi_role_addScanInfo(uint8_t *pAddr, uint8_t addrType, uint8_t txP
     scanList[numScanRes].dataLen = dataLen;
     strcpy(scanList[numScanRes].manuData, receivedData);
 
-    devState = 0;
-    //if the device is in the initial state save all surrounding data
-    if (devState == 0){
-        surroundingDevs[numScanRes].devAlpha = isolateAdvertInfo(receivedData, 1);
-        surroundingDevs[numScanRes].devNum = isolateAdvertInfo(receivedData, 2);
-        surroundingDevs[numScanRes].txPower = txPower;
-
-        Log_info4(ANSI_COLOR(FG_BLUE) "Dev No: %d" ANSI_COLOR(ATTR_RESET)  ", devAlpha: %d, devNum: %d, txPower: %d", numScanRes, surroundingDevs[numScanRes].devAlpha , surroundingDevs[numScanRes].devNum, surroundingDevs[numScanRes].txPower);
-    }//end if
-    devState = 1;
-
     Log_info4(ANSI_COLOR(FG_BLUE) "Dev No: %d" ANSI_COLOR(ATTR_RESET)  ", txPower: %d, rssi %d, BT ADDR: " ANSI_COLOR(FG_GREEN) "%s" ANSI_COLOR(ATTR_RESET), numScanRes, txPower, rssi, (uintptr_t)Util_convertBdAddr2Str(pAddr));
 
     // Increment scan result count
     numScanRes++;
   }
 }
+
+static void multi_role_addSurroundingScanInfo(uint8_t txPower, char *receivedData){
+    surroundingDevs[numSurroundingScanRes].devAlpha = isolateAdvertInfo(receivedData, 1);
+    surroundingDevs[numSurroundingScanRes].devNum = isolateAdvertInfo(receivedData, 2);
+    surroundingDevs[numSurroundingScanRes].txPower = txPower;
+
+    Log_info4(ANSI_COLOR(FG_BLUE) "Dev No: %d" ANSI_COLOR(ATTR_RESET)  ", devAlpha: %d, devNum: %d, txPower: %d", numScanRes, surroundingDevs[numScanRes].devAlpha , surroundingDevs[numScanRes].devNum, surroundingDevs[numScanRes].txPower);
+
+
+    numSurroundingScanRes++;
+}//end addSurroundingScanInfo function
+
 #endif // DEFAULT_DEV_DISC_BY_SVC_UUID
 
 /*********************************************************************
@@ -2484,6 +2554,7 @@ static void multi_role_handleKeys(uint8_t keys)
 
         timerStarted = false;
         timeClient = true;
+        postAdvScan = false;
         GapAdv_disable(advHandle);
         GapAdv_disable(advHandleTicks);
         GapAdv_disable(advHandleTime);
@@ -3535,9 +3606,12 @@ static void multi_role_tickSend (void){
 
     GapAdv_prepareLoadByHandle(advHandleTicks, GAP_ADV_FREE_OPTION_DONT_FREE);
 
-    Log_info0("Combined Status: Y");
+    //Log_info0("Combined Status: Y");
     advData3[17] = 'Y';
 
+    //set the target device in the advertData
+    advData3[15] = targetDevAlpha;
+    advData3[16] = targetDevNum;
 
     //include additional cases for when the device status or combination of is not OK (N)
 
@@ -3682,13 +3756,13 @@ static void multi_role_tickIsolation (void) {
     ticksPostScan = Clock_getTicks();
     uint32_t ticksDiffScan = ticksPostScan - ticksPreScan;
     Log_info1("RX Delay: %d", ticksDiffScan);
-    Log_info2("prescan (%d) --- postscan (%d)",  ticksPreScan, ticksPostScan);
+    //Log_info2("prescan (%d) --- postscan (%d)",  ticksPreScan, ticksPostScan);
 
     //save the combined delay to a global variable to be used in the advertising phase
     combinedTickDelay = txDelay + ticksDiffScan;
 
     //log information for debugging purposes
-    Log_info1("Combined Delay: %d", combinedTickDelay);
+    //Log_info1("Combined Delay: %d", combinedTickDelay);
     //Log_info1("current clock ticks: %d", ticksPostScan);
 
     Log_info3("TX (%d) + RX (%d) = Combined (%d)", txDelay, ticksDiffScan, combinedTickDelay);
@@ -3711,8 +3785,6 @@ static void multi_role_tickIsolation (void) {
     //perform processing here:
     multi_role_performIntervalTask();
 
-    Log_info0("Advertising: --------------------");
-    //Log_info0("Begin advertising phase of device");
 
     //function to call this after set time...
     multi_role_tickSend();
@@ -3726,7 +3798,7 @@ static void multi_role_performIntervalTask(void) {
 
     postAdvScan = false;
 
-    Log_info0("Sensor Check --------------------");
+    //Log_info0("Sensor Check --------------------");
 
     //perform magnetometer sensor readings
     bool magSensor = multi_role_magnetometerSensor();
@@ -3740,12 +3812,12 @@ static void multi_role_performIntervalTask(void) {
     //determine overall status of device
     if (magSensor == true && accSensor == true){
         deviceStatus = 0;
-        Log_info0("Current Device status: Y");
+        Log_info0("Current Device Status: Y");
     }//end if
 
     else {
         deviceStatus = 1; //an error occured somewhere
-        Log_info0("Current Device status: N");
+        Log_info0("Current Device Status: N");
     }//end else
 
     //process incoming advert Report data from devices up the line
@@ -3785,19 +3857,23 @@ static void multi_role_performIntervalTask(void) {
     }//end no issues
 
 
-    //include additional cases for when the device status or combination of is not OK (N)
+            //include additional cases for when the device status or combination of is not OK (N)
 
     //update the advertising handle with the new advertising data
     GapAdv_loadByHandle(advHandleTicks, GAP_ADV_DATA_TYPE_ADV, sizeof(advData3), advData3);
 
     //enable timer for scan delay in application event
-    Util_restartClock(&clkScanStart, 0);
+    //Util_restartClock(&clkScanStart, 0);
+
+    //postAdvScan = true;
+
+    //Log_info0("Application Event SCAN");
+    //enable scanning
+    //GapScan_enable(0, DEFAULT_SCAN_DURATION, 0);
+
+
 
     //GapAdv_enable(advHandleInitialDevice, GAP_ADV_ENABLE_OPTIONS_USE_MAX_EVENTS , 1);
-
-
-
-
 
 
     //begin advertising with new information
@@ -3814,14 +3890,14 @@ static void multi_role_performIntervalTask(void) {
 
 bool multi_role_magnetometerSensor(void){
     //placeholder for magnetometer sensor function
-    Log_info0("Magnetometer Sensor Check Complete");
+    //Log_info0("Magnetometer Sensor Check Complete");
 
     return true;
 }//end multi_role_magnetometerSensor
 
 bool multi_role_accelerometerSensor(void){
     //placeholder for accelerometer sensor function
-    Log_info0("Accelerometer Sensor Check Complete");
+    //Log_info0("Accelerometer Sensor Check Complete");
 
     return true;
 }//end multi_role_accelerometerSensor
@@ -3836,17 +3912,19 @@ static void multi_role_initialDeviceDiscovery(void){
     advData4[14] = ownDevNum;
 
     GapAdv_loadByHandle(advHandleInitialDevice, GAP_ADV_DATA_TYPE_ADV, sizeof(advData4), advData4);
-    GapAdv_enable(advHandleInitialDevice, GAP_ADV_ENABLE_OPTIONS_USE_MAX , 0);
+    GapAdv_enable(advHandleInitialDevice, GAP_ADV_ENABLE_OPTIONS_USE_DURATION , 500);
 
     //advertising set will be disabled when the device is able to find devices ±3 from itself
     //testing purposes, only looking for device ±1 but depending on the current device value too
 
+    /*
     //convert ownDevAlpha and ownDevNum to ascii numeric value
     int currentDevAlpha = ownDevAlpha;
     int currentDevNum = ownDevNum;
     int currentCombined = currentDevAlpha*100+currentDevNum; //combined value to determine values
 
     //if statements to determine the #of devices up and down the line - only limit devices up the line
+
 
     //not sure if this is the right way to do it
     //if the currentdevice is the first device: 6549=A1
@@ -3872,7 +3950,9 @@ static void multi_role_initialDeviceDiscovery(void){
 
     //always set to 2 for the tests
     noCombinedDevs = 2;
+    */
 
+    noCombinedDevs = 1; //for initial test with 2 boards only
 
     //get every device to advertise and scan in the PHY S8 to show the largest amount of devices around
     //Log_info3("Current Device: %d looks for %d up and %d down", currentCombined, noDevUpline, noDevDownline);
@@ -3880,11 +3960,55 @@ static void multi_role_initialDeviceDiscovery(void){
     //do not know the effective end of the line = cannot determine the end of the line
 
     //enable scanning for devices
-    numScanRes = 0;
-    int initScanDuration = 1000; //in 10 ms (total 10s)
-    GapScan_enable(0, initScanDuration, 0);
+    //numScanRes = 0;
+    //int initScanDuration = 1000; //in 10 ms (total 10s)
+    //GapScan_enable(0, initScanDuration, 0);
 
 }//end multi_role_initialDeviceDiscovery
+
+
+static void multi_role_determineSurroundingDevices(int numFound) {
+
+
+    int downDevTarget = 99;
+
+    int currentDevAlpha = ownDevAlpha;
+    int currentDevNum = ownDevNum;
+    int currentCombined = currentDevAlpha*100+currentDevNum; //combined value to determine values
+
+    for (int i = 0; i < numFound; i++) {
+
+        int combinedSurroundingDev = (surroundingDevs[i].devAlpha)*100 + surroundingDevs[i].devNum;
+
+        if (combinedSurroundingDev < currentCombined)
+            noUpDevs = noUpDevs+1;
+
+        else if (combinedSurroundingDev > currentCombined){
+            noDownDevs = noDownDevs +1;
+            downDevTarget = i;
+        }//end else
+
+    }//end for loop
+
+    Log_info2("Surrounding Devices: up (%d) down (%d)", noUpDevs, noDownDevs);
+
+
+    //check to see if the variable is the same as original
+    if (downDevTarget != 99){
+        //sprintf(targetDevAlpha, "%x", surroundingDevs[downDevTarget].devAlpha);
+        //sprintf(targetDevNum, "%x", surroundingDevs[downDevTarget].devNum);
+
+        targetDevAlpha = surroundingDevs[downDevTarget].devAlpha;
+        targetDevNum = surroundingDevs[downDevTarget].devNum;
+
+
+    }//end if
+
+    multi_role_enqueueMsg(MR_EVT_POSTINITSETUP, NULL);
+
+
+
+}//end multi_role_determingSurroundingDevices
 
 /*********************************************************************
 *********************************************************************/

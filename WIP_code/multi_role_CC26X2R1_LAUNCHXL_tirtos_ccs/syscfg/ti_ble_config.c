@@ -184,8 +184,8 @@ uint8_t advData3[] =
 
 
    //target device ID information
-   'A',
-   '4',
+   0x00,
+   0x00,
 
    //status byte
    'N'
