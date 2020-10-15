@@ -160,10 +160,15 @@ typedef enum {
 #define MULTIROLE_ASSERT(expr) if (!(expr)) multi_role_spin();
 
 
+//SNV predefines
+#define BUF_LEN 4
+#define SNV_ID_APP 0x80
+uint8 buf[BUF_LEN] = {0,};
+
 
 
 char ownDevAlpha = 'A';
-char ownDevNum = '1';
+char ownDevNum = '2';
 
 //placeholders...
 char targetDevAlpha = 'X';
@@ -224,6 +229,9 @@ bool postAdvScan = false;
 
 bool correctDevice = false;
 
+//current device status
+uint8_t deviceStatus = 0;
+
 //calculate after surrounding devices initialisation scan is done
 int noUpDevs = 0;
 int noDownDevs = 0;
@@ -245,6 +253,8 @@ typedef struct {
     long int devAlpha;
     long int devNum;
     uint8_t txPower;
+    uint8_t location; //1 - up the line, 2 - down the line
+    uint8_t distance; //distance from the current device
 }PoleDev_surrDevs;
 
 static PoleDev_surrDevs surroundingDevs[6];
@@ -545,6 +555,8 @@ bool multi_role_accelerometerSensor(void);
 
 static void multi_role_determineSurroundingDevices(int numFound);
 static void multi_role_addSurroundingScanInfo(uint8_t txPower, char *receivedData);
+static void multi_role_currentDeviceStatusCheck (void);
+static void multi_role_findDeviceFromList (int numFound, int deviceToFind, int directionOfDevice);
 
 /*********************************************************************
  * EXTERN FUNCTIONS
@@ -773,6 +785,30 @@ static void multi_role_taskFxn(UArg a0, UArg a1)
 {
   // Initialize application
   multi_role_init();
+
+
+  //snv code
+  uint8 status = SUCCESS;
+
+  status = osal_snv_read(SNV_ID_APP, BUF_LEN, (uint8 *)buf);
+
+  if (status != SUCCESS){
+      Log_info1("SNV READ FAIL: %d", status);
+
+      //write first time to initialise SNV ID
+      osal_snv_write(SNV_ID_APP, BUF_LEN, (uint8 *)buf);
+  }//end if
+
+  buf[0]++;
+  status = osal_snv_write(SNV_ID_APP, BUF_LEN, (uint8 *)buf);
+
+  if (status != SUCCESS){
+      Log_info1("SNV READ FAIL: %d", status);
+  }//end if
+
+  else {
+      Log_info1("Num of Resets: %d", buf[0]);
+  }//end else
 
   // Application main loop
   for (;;)
@@ -1644,11 +1680,14 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
               //function here to determine if the received data is an initial device first
 
 
+              //using the length of the advertData for initialisation as a filter
               if (pAdvRpt->dataLen == 15){
                   Log_info0("Initial: Device Found");
-
                   multi_role_addSurroundingScanInfo(pAdvRpt->txPower, &manuToPrint);
-                  GapScan_disable();
+
+                  if (numSurroundingScanRes == 1){
+                      GapScan_disable();
+                  }
               }//if the correct device found
 
 
@@ -1746,10 +1785,7 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
                  MR_ADDR_STR_SIZE);
   #endif // DEFAULT_DEV_DISC_BY_SVC_UUID
 
-
         }//end for loop
-
-
       }//end pAddrs if statement
 
 
@@ -1854,6 +1890,7 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
         postAdvScan = false;
         Util_startClock(&clkSecondsSet);
         Seconds_getTime(&ts);
+        multi_role_currentDeviceStatusCheck();
 
         //Util_startClock(&clkPeriodicData);
         Log_info2(ANSI_COLOR(FG_GREEN) "Seconds: %d, nSecs: %d:" ANSI_COLOR(ATTR_RESET), ts.secs, ts.nsecs);
@@ -2228,7 +2265,7 @@ static void multi_role_addSurroundingScanInfo(uint8_t txPower, char *receivedDat
     surroundingDevs[numSurroundingScanRes].devNum = isolateAdvertInfo(receivedData, 2);
     surroundingDevs[numSurroundingScanRes].txPower = txPower;
 
-    Log_info4(ANSI_COLOR(FG_BLUE) "Dev No: %d" ANSI_COLOR(ATTR_RESET)  ", devAlpha: %d, devNum: %d, txPower: %d", numScanRes, surroundingDevs[numScanRes].devAlpha , surroundingDevs[numScanRes].devNum, surroundingDevs[numScanRes].txPower);
+    Log_info4(ANSI_COLOR(FG_BLUE) "Dev No: %d" ANSI_COLOR(ATTR_RESET)  ", devAlpha: %d, devNum: %d, txPower: %d", numSurroundingScanRes, surroundingDevs[numSurroundingScanRes].devAlpha , surroundingDevs[numSurroundingScanRes].devNum, surroundingDevs[numSurroundingScanRes].txPower);
 
 
     numSurroundingScanRes++;
@@ -3747,10 +3784,6 @@ static void multi_role_tickIsolation (void) {
         Util_restartClock(&clkTimeSync, startingTimeClock);
     }//end if
 
-
-
-
-
     //perform processing here:
     multi_role_performIntervalTask();
 
@@ -3760,12 +3793,9 @@ static void multi_role_tickIsolation (void) {
 
 }//end multi_role_tickIsolation
 
+static void multi_role_currentDeviceStatusCheck (void){
 
-static void multi_role_performIntervalTask(void) {
-    //function to perform tasks to be run at 10min intervals
-    //will be called by the application event
-
-    postAdvScan = false;
+    //determine the overall status
 
     //Log_info0("Sensor Check --------------------");
 
@@ -3775,9 +3805,9 @@ static void multi_role_performIntervalTask(void) {
     //perform accelerometer sensor readings
     bool accSensor = multi_role_accelerometerSensor();
 
-    Log_info0("Device Status --------------------");
+    //Log_info0("Device Status --------------------");
 
-    uint8_t deviceStatus = 0;
+    deviceStatus = 0;
     //determine overall status of device
     if (magSensor == true && accSensor == true){
         deviceStatus = 0;
@@ -3788,6 +3818,22 @@ static void multi_role_performIntervalTask(void) {
         deviceStatus = 1; //an error occured somewhere
         Log_info0("Current Device Status: N");
     }//end else
+
+
+    //if back - update a local struct
+
+
+}//end multi_role_currentDeviceStatusCheck
+
+static void multi_role_performIntervalTask(void) {
+    //function to perform tasks to be run at 10min intervals
+
+    //should only be called after the advertised data has been received
+
+    //will be called by the application event
+
+    postAdvScan = false;
+
 
     //process incoming advert Report data from devices up the line
 
@@ -3859,14 +3905,12 @@ static void multi_role_performIntervalTask(void) {
 
 bool multi_role_magnetometerSensor(void){
     //placeholder for magnetometer sensor function
-    //Log_info0("Magnetometer Sensor Check Complete");
 
     return true;
 }//end multi_role_magnetometerSensor
 
 bool multi_role_accelerometerSensor(void){
     //placeholder for accelerometer sensor function
-    //Log_info0("Accelerometer Sensor Check Complete");
 
     return true;
 }//end multi_role_accelerometerSensor
@@ -3945,39 +3989,73 @@ static void multi_role_determineSurroundingDevices(int numFound) {
     int currentDevNum = ownDevNum;
     int currentCombined = currentDevAlpha*100+currentDevNum; //combined value to determine values
 
+    //determine the locations of the discovered devices in relation to the current device and save in array
     for (int i = 0; i < numFound; i++) {
 
         int combinedSurroundingDev = (surroundingDevs[i].devAlpha)*100 + surroundingDevs[i].devNum;
 
-        if (combinedSurroundingDev < currentCombined)
+        //up the line
+        if (combinedSurroundingDev < currentCombined) {
             noUpDevs = noUpDevs+1;
+            surroundingDevs[i].location = 1;
+            surroundingDevs[i].distance = currentCombined - combinedSurroundingDev;
+        }//end if
 
+        //down the line
         else if (combinedSurroundingDev > currentCombined){
             noDownDevs = noDownDevs +1;
             downDevTarget = i;
+            surroundingDevs[i].location = 2;
+            surroundingDevs[i].distance = combinedSurroundingDev - currentCombined;
         }//end else
-
     }//end for loop
 
     Log_info2("Surrounding Devices: up (%d) down (%d)", noUpDevs, noDownDevs);
 
+    //determine if there are devices up the line from the device to communicate with
+    //determine the device to connect with
+
+    //PUT CODE IN TO ORDER THE LIST AS TO DETERMINE THE NEXT DEVICE TO CONNECT TO
+
+
 
     //check to see if the variable is the same as original
     if (downDevTarget != 99){
-        //sprintf(targetDevAlpha, "%x", surroundingDevs[downDevTarget].devAlpha);
-        //sprintf(targetDevNum, "%x", surroundingDevs[downDevTarget].devNum);
 
-        targetDevAlpha = surroundingDevs[downDevTarget].devAlpha;
-        targetDevNum = surroundingDevs[downDevTarget].devNum;
-
+        //find closest down the line device from current device
+        multi_role_findDeviceFromList(numFound, 1, 2);
 
     }//end if
 
+    //call the application event to enable normal device state
     multi_role_enqueueMsg(MR_EVT_POSTINITSETUP, NULL);
 
-
-
 }//end multi_role_determingSurroundingDevices
+
+
+static void multi_role_findDeviceFromList (int numFound, int deviceToFind, int directionOfDevice) {
+
+    //numFound - number of devices listed in the struct that the device has found surrounding itself
+    //deviceToFind - distance from the current device to find
+    //directionOfDevice - 1 if up the line, 2 if down the line
+
+
+    for (int i = 0; i < numFound; i++){
+
+        //filter by devices according to directionOfDevice
+        if (surroundingDevs[i].location == directionOfDevice){
+
+            //filter by the distance from the current device
+            if (surroundingDevs[i].distance == deviceToFind){
+                //set the device details to be connected to
+                targetDevAlpha = surroundingDevs[i].devAlpha;
+                targetDevNum = surroundingDevs[i].devNum;
+            }//end if
+        }//end if
+    }//end for
+
+
+}//end multi_role_findDeviceFromList
 
 /*********************************************************************
 *********************************************************************/
