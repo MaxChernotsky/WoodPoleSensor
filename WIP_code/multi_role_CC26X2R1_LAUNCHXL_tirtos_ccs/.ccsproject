@@ -15,4 +15,5 @@
 	<templateProperties value="id=multi_role_CC26X2R1_LAUNCHXL_tirtos_ccs.projectspec.multi_role_CC26X2R1_LAUNCHXL_tirtos_ccs,type=rtsc,xdcToolsVersion=3_61_00_16_core,target=ti.targets.arm.elf.M4F,platform=ti.platforms.simplelink:CC2642R1F,buildProfile=release,isHybrid=true,configuroOptions= --compileOptions &quot;${COMPILER_FLAGS} &quot;"/>
 	<origin value="/Applications/ti/simplelink_cc13x2_26x2_sdk_4_10_00_78/examples/rtos/CC26X2R1_LAUNCHXL/ble5stack/multi_role/tirtos/ccs/multi_role_CC26X2R1_LAUNCHXL_tirtos_ccs.projectspec"/>
 	<filesToOpen value=""/>
+	<isTargetManual value="false"/>
 </projectOptions>

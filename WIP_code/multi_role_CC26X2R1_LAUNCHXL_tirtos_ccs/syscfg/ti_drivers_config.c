@@ -246,7 +246,7 @@ const uint_least8_t ECDH_count = CONFIG_ECDH_COUNT;
 #include <ti/drivers/GPIO.h>
 #include <ti/drivers/gpio/GPIOCC26XX.h>
 
-#define CONFIG_GPIO_COUNT 2
+#define CONFIG_GPIO_COUNT 4
 
 /*
  *  ======== gpioPinConfigs ========
@@ -257,6 +257,10 @@ GPIO_PinConfig gpioPinConfigs[] = {
     GPIOCC26XX_DIO_13 | GPIO_DO_NOT_CONFIG,
     /* CONFIG_GPIO_BTN2 : LaunchPad Button BTN-2 (Right) */
     GPIOCC26XX_DIO_14 | GPIO_DO_NOT_CONFIG,
+    /* CONFIG_GPIO_RLED */
+    GPIOCC26XX_DIO_06 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_MED | GPIO_CFG_OUT_LOW,
+    /* CONFIG_GPIO_0 */
+    GPIOCC26XX_DIO_00 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_MED | GPIO_CFG_OUT_LOW,
 };
 
 /*
@@ -272,10 +276,14 @@ GPIO_CallbackFxn gpioCallbackFunctions[] = {
     NULL,
     /* CONFIG_GPIO_BTN2 : LaunchPad Button BTN-2 (Right) */
     NULL,
+    /* CONFIG_GPIO_0 */
+    NULL,
 };
 
 const uint_least8_t CONFIG_GPIO_BTN1_CONST = CONFIG_GPIO_BTN1;
 const uint_least8_t CONFIG_GPIO_BTN2_CONST = CONFIG_GPIO_BTN2;
+const uint_least8_t CONFIG_GPIO_RLED_CONST = CONFIG_GPIO_RLED;
+const uint_least8_t CONFIG_GPIO_0_CONST = CONFIG_GPIO_0;
 
 /*
  *  ======== GPIOCC26XX_config ========
@@ -283,8 +291,8 @@ const uint_least8_t CONFIG_GPIO_BTN2_CONST = CONFIG_GPIO_BTN2;
 const GPIOCC26XX_Config GPIOCC26XX_config = {
     .pinConfigs = (GPIO_PinConfig *)gpioPinConfigs,
     .callbacks = (GPIO_CallbackFxn *)gpioCallbackFunctions,
-    .numberOfPinConfigs = 2,
-    .numberOfCallbacks = 2,
+    .numberOfPinConfigs = 3,
+    .numberOfCallbacks = 3,
     .intPriority = (~0)
 };
 
@@ -364,7 +372,7 @@ const uint_least8_t NVS_count = CONFIG_NVS_COUNT;
 #include <ti/drivers/PIN.h>
 #include <ti/drivers/pin/PINCC26XX.h>
 
-#define CONFIG_PIN_COUNT 4
+#define CONFIG_PIN_COUNT 7
 
 const PIN_Config BoardGpioInitTable[CONFIG_PIN_COUNT + 1] = {
     /* XDS110 UART, Parent Signal: CONFIG_DISPLAY_UART TX, (DIO3) */
@@ -375,6 +383,11 @@ const PIN_Config BoardGpioInitTable[CONFIG_PIN_COUNT + 1] = {
     CONFIG_PIN_BTN1 | PIN_INPUT_EN | PIN_PULLUP | PIN_IRQ_DIS,
     /* LaunchPad Button BTN-2 (Right), Parent Signal: CONFIG_GPIO_BTN2 GPIO Pin, (DIO14) */
     CONFIG_PIN_BTN2 | PIN_INPUT_EN | PIN_PULLUP | PIN_IRQ_DIS,
+    /*  Parent Signal: CONFIG_GPIO_RLED GPIO Pin, (BOARD RLED) */
+    CONFIG_PIN_RLED | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW | PIN_PUSHPULL | PIN_DRVSTR_MED,
+
+    /* DIO0*/
+    CONFIG_PIN_0 | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW | PIN_PUSHPULL | PIN_DRVSTR_MED,
 
     PIN_TERMINATE
 };

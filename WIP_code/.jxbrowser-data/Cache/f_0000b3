@@ -788,7 +788,7 @@
     "name": "XDCTools",
     "package": "XDCTools",
     "packageId": "xdctools",
-    "packageOrder": 423,
+    "packageOrder": 413,
     "packagePath": "xdctools_3_60_02_34_core",
     "packageUId": "xdctools__3.60.02.34",
     "packageVersion": "3.60.02.34",
@@ -849,7 +849,7 @@
     "name": "XDCTools",
     "package": "XDCTools",
     "packageId": "xdctools",
-    "packageOrder": 391,
+    "packageOrder": 424,
     "packagePath": "xdctools_3_61_00_16_core",
     "packageUId": "xdctools__3.61.00.16",
     "packageVersion": "3.61.00.16",
@@ -859,7 +859,6 @@
       "XDCTools"
     ],
     "semver": "3.61.0",
-    "shortDescription": "Tools for developing and using embedded target content that extends or depends on RTSC components",
     "tags": [
       "ROV",
       "RTA",

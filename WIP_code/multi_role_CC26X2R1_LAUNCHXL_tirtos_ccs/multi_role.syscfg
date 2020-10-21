@@ -24,6 +24,7 @@ const ECDH1       = ECDH.addInstance();
 const GPIO        = scripting.addModule("/ti/drivers/GPIO");
 const GPIO1       = GPIO.addInstance();
 const GPIO2       = GPIO.addInstance();
+const GPIO3       = GPIO.addInstance();
 const NVS         = scripting.addModule("/ti/drivers/NVS");
 const NVS1        = NVS.addInstance();
 const Power       = scripting.addModule("/ti/drivers/Power");
@@ -96,6 +97,10 @@ GPIO2.mode              = "Dynamic";
 GPIO2.$name             = "CONFIG_GPIO_BTN2";
 GPIO2.pinInstance.$name = "CONFIG_PIN_BTN2";
 
+GPIO3.$name             = "CONFIG_GPIO_0";
+GPIO3.$hardware         = system.deviceData.board.components.LED_RED;
+GPIO3.pinInstance.$name = "CONFIG_PIN_0";
+
 NVS1.$name                    = "CONFIG_NVSINTERNAL";
 NVS1.internalFlash.$name      = "ti_drivers_nvs_NVSCC26XX0";
 NVS1.internalFlash.regionBase = 0x48000;
@@ -113,3 +118,4 @@ Display1.uart.uart.txPin.$suggestSolution = "8";
 Display1.uart.uart.rxPin.$suggestSolution = "7";
 GPIO1.gpioPin.$suggestSolution            = "19";
 GPIO2.gpioPin.$suggestSolution            = "20";
+GPIO3.gpioPin.$suggestSolution            = "11";

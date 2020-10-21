@@ -1,0 +1,246 @@
+[
+  {
+    "downloadLink": "api/bundle?vid=com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35&download=true",
+    "makeofflineLink": "api/bundles?vids=com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35",
+    "removeofflineLink": "api/resources?id=0nrLeLYcH7ukrM&path=Software/SimpleLink CC13x2 26x2 SDK/Examples/Development Tools/CC26x2R LaunchPad/BLE5-Stack/project_zero/TI-RTOS/CCS Compiler/project_zero&removeoffline=true",
+    "_id": "0nrLeLYcH7ukrM",
+    "advanced": {
+      "overrideProjectSpecDeviceId": true
+    },
+    "devtools": [
+      "CC26x2R LaunchPad"
+    ],
+    "link": "api/linkTo/0nrLeLYcH7ukrM?extname=.cfg",
+    "linkType": "local",
+    "name": "project_zero_app.cfg",
+    "packageUId": "com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35",
+    "parentID": "0nr963VVZHQo58",
+    "resourceSubClass": [
+      "example.general"
+    ],
+    "resourceType": "file",
+    "type": "resource",
+    "text": "project_zero_app.cfg",
+    "url": "/api/resources?path=Software/SimpleLink%20CC13x2%2026x2%20SDK/Examples/Development%20Tools/CC26x2R%20LaunchPad/BLE5-Stack/project_zero/TI-RTOS/CCS%20Compiler/project_zero&package=com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35::arm.gnu__9.2.1::com.ti.SIMPLELINK_CC2640R2_SDK__4.10.00.10::com.ti.SIMPLELINK_CC26X2_SDK__2.30.00.34::xdctools__3.61.00.16",
+    "packageOrder": 273
+  },
+  {
+    "downloadLink": "api/bundle?vid=com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35&download=true",
+    "makeofflineLink": "api/bundles?vids=com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35",
+    "removeofflineLink": "api/resources?id=0nrJkVzwWFD7rs&path=Software/SimpleLink CC13x2 26x2 SDK/Examples/Development Tools/CC26x2R LaunchPad/BLE5-Stack/project_zero/TI-RTOS/CCS Compiler/project_zero&removeoffline=true",
+    "_id": "0nrJkVzwWFD7rs",
+    "advanced": {
+      "overrideProjectSpecDeviceId": true
+    },
+    "devtools": [
+      "CC26x2R LaunchPad"
+    ],
+    "link": "api/linkTo/0nrJkVzwWFD7rs?extname=.syscfg",
+    "linkType": "local",
+    "name": "project_zero.syscfg",
+    "packageUId": "com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35",
+    "parentID": "0nr963VVZHQo58",
+    "resourceSubClass": [
+      "example.general"
+    ],
+    "resourceType": "file",
+    "type": "resource",
+    "text": "project_zero.syscfg",
+    "url": "/api/resources?path=Software/SimpleLink%20CC13x2%2026x2%20SDK/Examples/Development%20Tools/CC26x2R%20LaunchPad/BLE5-Stack/project_zero/TI-RTOS/CCS%20Compiler/project_zero&package=com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35::arm.gnu__9.2.1::com.ti.SIMPLELINK_CC2640R2_SDK__4.10.00.10::com.ti.SIMPLELINK_CC26X2_SDK__2.30.00.34::xdctools__3.61.00.16",
+    "packageOrder": 273
+  },
+  {
+    "downloadLink": "api/bundle?vid=com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35&download=true",
+    "makeofflineLink": "api/bundles?vids=com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35",
+    "removeofflineLink": "api/resources?id=0nrJqzHNa1IvFg&path=Software/SimpleLink CC13x2 26x2 SDK/Examples/Development Tools/CC26x2R LaunchPad/BLE5-Stack/project_zero/TI-RTOS/CCS Compiler/project_zero&removeoffline=true",
+    "_id": "0nrJqzHNa1IvFg",
+    "advanced": {
+      "overrideProjectSpecDeviceId": true
+    },
+    "devtools": [
+      "CC26x2R LaunchPad"
+    ],
+    "link": "api/linkTo/0nrJqzHNa1IvFg?extname=.html",
+    "linkType": "local",
+    "name": "Board.html",
+    "packageUId": "com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35",
+    "parentID": "0nr963VVZHQo58",
+    "resourceSubClass": [
+      "example.general"
+    ],
+    "resourceType": "file",
+    "type": "resource",
+    "text": "Board.html",
+    "url": "/api/resources?path=Software/SimpleLink%20CC13x2%2026x2%20SDK/Examples/Development%20Tools/CC26x2R%20LaunchPad/BLE5-Stack/project_zero/TI-RTOS/CCS%20Compiler/project_zero&package=com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35::arm.gnu__9.2.1::com.ti.SIMPLELINK_CC2640R2_SDK__4.10.00.10::com.ti.SIMPLELINK_CC26X2_SDK__2.30.00.34::xdctools__3.61.00.16",
+    "packageOrder": 273
+  },
+  {
+    "downloadLink": "api/bundle?vid=com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35&download=true",
+    "makeofflineLink": "api/bundles?vids=com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35",
+    "removeofflineLink": "api/resources?id=0nrgxL2oZWoe44&path=Software/SimpleLink CC13x2 26x2 SDK/Examples/Development Tools/CC26x2R LaunchPad/BLE5-Stack/project_zero/TI-RTOS/CCS Compiler/project_zero&removeoffline=true",
+    "_id": "0nrgxL2oZWoe44",
+    "advanced": {
+      "overrideProjectSpecDeviceId": true
+    },
+    "devtools": [
+      "CC26x2R LaunchPad"
+    ],
+    "link": "api/linkTo/0nrgxL2oZWoe44?extname=.defs",
+    "linkType": "local",
+    "name": "makefile.defs",
+    "packageUId": "com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35",
+    "parentID": "0nr963VVZHQo58",
+    "resourceSubClass": [
+      "example.general"
+    ],
+    "resourceType": "file",
+    "type": "resource",
+    "text": "makefile.defs",
+    "url": "/api/resources?path=Software/SimpleLink%20CC13x2%2026x2%20SDK/Examples/Development%20Tools/CC26x2R%20LaunchPad/BLE5-Stack/project_zero/TI-RTOS/CCS%20Compiler/project_zero&package=com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35::arm.gnu__9.2.1::com.ti.SIMPLELINK_CC2640R2_SDK__4.10.00.10::com.ti.SIMPLELINK_CC26X2_SDK__2.30.00.34::xdctools__3.61.00.16",
+    "packageOrder": 273
+  },
+  {
+    "text": "Application",
+    "type": "folder",
+    "numChildren": 0,
+    "numChildrenLocal": 3,
+    "children": true,
+    "state": {
+      "opened": false
+    },
+    "packageUId": "com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35",
+    "url": "/api/resources?path=Software/SimpleLink%20CC13x2%2026x2%20SDK/Examples/Development%20Tools/CC26x2R%20LaunchPad/BLE5-Stack/project_zero/TI-RTOS/CCS%20Compiler/project_zero&package=com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35::arm.gnu__9.2.1::com.ti.SIMPLELINK_CC2640R2_SDK__4.10.00.10::com.ti.SIMPLELINK_CC26X2_SDK__2.30.00.34::xdctools__3.61.00.16",
+    "downloadLink": "api/bundle?vid=com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35&download=true",
+    "makeofflineLink": "api/bundles?vids=com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35",
+    "removeofflineLink": "api/resources?package=arm.gnu__9.2.1::com.ti.SIMPLELINK_ACADEMY_CC13X2_26X2_SDK__4.20.00.00::com.ti.SIMPLELINK_ACADEMY_CC2640R2SDK__4.10.01.00::com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35::com.ti.SIMPLELINK_CC2640R2_SDK__4.10.00.10::com.ti.SIMPLELINK_CC26X2_SDK__2.30.00.34::xdctools__3.61.00.16&path=Software/SimpleLink CC13x2 26x2 SDK/Examples/Development Tools/CC26x2R LaunchPad/BLE5-Stack/project_zero/TI-RTOS/CCS Compiler/project_zero/Application&removeoffline=true",
+    "packageOrder": 273
+  },
+  {
+    "text": "Tools",
+    "type": "folder",
+    "numChildren": 0,
+    "numChildrenLocal": 3,
+    "children": true,
+    "state": {
+      "opened": false
+    },
+    "packageUId": "com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35",
+    "url": "/api/resources?path=Software/SimpleLink%20CC13x2%2026x2%20SDK/Examples/Development%20Tools/CC26x2R%20LaunchPad/BLE5-Stack/project_zero/TI-RTOS/CCS%20Compiler/project_zero&package=com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35::arm.gnu__9.2.1::com.ti.SIMPLELINK_CC2640R2_SDK__4.10.00.10::com.ti.SIMPLELINK_CC26X2_SDK__2.30.00.34::xdctools__3.61.00.16",
+    "downloadLink": "api/bundle?vid=com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35&download=true",
+    "makeofflineLink": "api/bundles?vids=com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35",
+    "removeofflineLink": "api/resources?package=arm.gnu__9.2.1::com.ti.SIMPLELINK_ACADEMY_CC13X2_26X2_SDK__4.20.00.00::com.ti.SIMPLELINK_ACADEMY_CC2640R2SDK__4.10.01.00::com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35::com.ti.SIMPLELINK_CC2640R2_SDK__4.10.00.10::com.ti.SIMPLELINK_CC26X2_SDK__2.30.00.34::xdctools__3.61.00.16&path=Software/SimpleLink CC13x2 26x2 SDK/Examples/Development Tools/CC26x2R LaunchPad/BLE5-Stack/project_zero/TI-RTOS/CCS Compiler/project_zero/Tools&removeoffline=true",
+    "packageOrder": 273
+  },
+  {
+    "text": "iCallBLE",
+    "type": "folder",
+    "numChildren": 0,
+    "numChildrenLocal": 4,
+    "children": true,
+    "state": {
+      "opened": false
+    },
+    "packageUId": "com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35",
+    "url": "/api/resources?path=Software/SimpleLink%20CC13x2%2026x2%20SDK/Examples/Development%20Tools/CC26x2R%20LaunchPad/BLE5-Stack/project_zero/TI-RTOS/CCS%20Compiler/project_zero&package=com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35::arm.gnu__9.2.1::com.ti.SIMPLELINK_CC2640R2_SDK__4.10.00.10::com.ti.SIMPLELINK_CC26X2_SDK__2.30.00.34::xdctools__3.61.00.16",
+    "downloadLink": "api/bundle?vid=com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35&download=true",
+    "makeofflineLink": "api/bundles?vids=com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35",
+    "removeofflineLink": "api/resources?package=arm.gnu__9.2.1::com.ti.SIMPLELINK_ACADEMY_CC13X2_26X2_SDK__4.20.00.00::com.ti.SIMPLELINK_ACADEMY_CC2640R2SDK__4.10.01.00::com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35::com.ti.SIMPLELINK_CC2640R2_SDK__4.10.00.10::com.ti.SIMPLELINK_CC26X2_SDK__2.30.00.34::xdctools__3.61.00.16&path=Software/SimpleLink CC13x2 26x2 SDK/Examples/Development Tools/CC26x2R LaunchPad/BLE5-Stack/project_zero/TI-RTOS/CCS Compiler/project_zero/iCallBLE&removeoffline=true",
+    "packageOrder": 273
+  },
+  {
+    "text": "Drivers",
+    "type": "folder",
+    "numChildren": 0,
+    "numChildrenLocal": 5,
+    "children": true,
+    "state": {
+      "opened": false
+    },
+    "packageUId": "com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35",
+    "url": "/api/resources?path=Software/SimpleLink%20CC13x2%2026x2%20SDK/Examples/Development%20Tools/CC26x2R%20LaunchPad/BLE5-Stack/project_zero/TI-RTOS/CCS%20Compiler/project_zero&package=com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35::arm.gnu__9.2.1::com.ti.SIMPLELINK_CC2640R2_SDK__4.10.00.10::com.ti.SIMPLELINK_CC26X2_SDK__2.30.00.34::xdctools__3.61.00.16",
+    "downloadLink": "api/bundle?vid=com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35&download=true",
+    "makeofflineLink": "api/bundles?vids=com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35",
+    "removeofflineLink": "api/resources?package=arm.gnu__9.2.1::com.ti.SIMPLELINK_ACADEMY_CC13X2_26X2_SDK__4.20.00.00::com.ti.SIMPLELINK_ACADEMY_CC2640R2SDK__4.10.01.00::com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35::com.ti.SIMPLELINK_CC2640R2_SDK__4.10.00.10::com.ti.SIMPLELINK_CC26X2_SDK__2.30.00.34::xdctools__3.61.00.16&path=Software/SimpleLink CC13x2 26x2 SDK/Examples/Development Tools/CC26x2R LaunchPad/BLE5-Stack/project_zero/TI-RTOS/CCS Compiler/project_zero/Drivers&removeoffline=true",
+    "packageOrder": 273
+  },
+  {
+    "text": "iCall",
+    "type": "folder",
+    "numChildren": 0,
+    "numChildrenLocal": 6,
+    "children": true,
+    "state": {
+      "opened": false
+    },
+    "packageUId": "com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35",
+    "url": "/api/resources?path=Software/SimpleLink%20CC13x2%2026x2%20SDK/Examples/Development%20Tools/CC26x2R%20LaunchPad/BLE5-Stack/project_zero/TI-RTOS/CCS%20Compiler/project_zero&package=com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35::arm.gnu__9.2.1::com.ti.SIMPLELINK_CC2640R2_SDK__4.10.00.10::com.ti.SIMPLELINK_CC26X2_SDK__2.30.00.34::xdctools__3.61.00.16",
+    "downloadLink": "api/bundle?vid=com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35&download=true",
+    "makeofflineLink": "api/bundles?vids=com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35",
+    "removeofflineLink": "api/resources?package=arm.gnu__9.2.1::com.ti.SIMPLELINK_ACADEMY_CC13X2_26X2_SDK__4.20.00.00::com.ti.SIMPLELINK_ACADEMY_CC2640R2SDK__4.10.01.00::com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35::com.ti.SIMPLELINK_CC2640R2_SDK__4.10.00.10::com.ti.SIMPLELINK_CC26X2_SDK__2.30.00.34::xdctools__3.61.00.16&path=Software/SimpleLink CC13x2 26x2 SDK/Examples/Development Tools/CC26x2R LaunchPad/BLE5-Stack/project_zero/TI-RTOS/CCS Compiler/project_zero/iCall&removeoffline=true",
+    "packageOrder": 273
+  },
+  {
+    "text": "Include",
+    "type": "folder",
+    "numChildren": 0,
+    "numChildrenLocal": 6,
+    "children": true,
+    "state": {
+      "opened": false
+    },
+    "packageUId": "com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35",
+    "url": "/api/resources?path=Software/SimpleLink%20CC13x2%2026x2%20SDK/Examples/Development%20Tools/CC26x2R%20LaunchPad/BLE5-Stack/project_zero/TI-RTOS/CCS%20Compiler/project_zero&package=com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35::arm.gnu__9.2.1::com.ti.SIMPLELINK_CC2640R2_SDK__4.10.00.10::com.ti.SIMPLELINK_CC26X2_SDK__2.30.00.34::xdctools__3.61.00.16",
+    "downloadLink": "api/bundle?vid=com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35&download=true",
+    "makeofflineLink": "api/bundles?vids=com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35",
+    "removeofflineLink": "api/resources?package=arm.gnu__9.2.1::com.ti.SIMPLELINK_ACADEMY_CC13X2_26X2_SDK__4.20.00.00::com.ti.SIMPLELINK_ACADEMY_CC2640R2SDK__4.10.01.00::com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35::com.ti.SIMPLELINK_CC2640R2_SDK__4.10.00.10::com.ti.SIMPLELINK_CC26X2_SDK__2.30.00.34::xdctools__3.61.00.16&path=Software/SimpleLink CC13x2 26x2 SDK/Examples/Development Tools/CC26x2R LaunchPad/BLE5-Stack/project_zero/TI-RTOS/CCS Compiler/project_zero/Include&removeoffline=true",
+    "packageOrder": 273
+  },
+  {
+    "text": "OAD",
+    "type": "folder",
+    "numChildren": 0,
+    "numChildrenLocal": 9,
+    "children": true,
+    "state": {
+      "opened": false
+    },
+    "packageUId": "com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35",
+    "url": "/api/resources?path=Software/SimpleLink%20CC13x2%2026x2%20SDK/Examples/Development%20Tools/CC26x2R%20LaunchPad/BLE5-Stack/project_zero/TI-RTOS/CCS%20Compiler/project_zero&package=com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35::arm.gnu__9.2.1::com.ti.SIMPLELINK_CC2640R2_SDK__4.10.00.10::com.ti.SIMPLELINK_CC26X2_SDK__2.30.00.34::xdctools__3.61.00.16",
+    "downloadLink": "api/bundle?vid=com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35&download=true",
+    "makeofflineLink": "api/bundles?vids=com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35",
+    "removeofflineLink": "api/resources?package=arm.gnu__9.2.1::com.ti.SIMPLELINK_ACADEMY_CC13X2_26X2_SDK__4.20.00.00::com.ti.SIMPLELINK_ACADEMY_CC2640R2SDK__4.10.01.00::com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35::com.ti.SIMPLELINK_CC2640R2_SDK__4.10.00.10::com.ti.SIMPLELINK_CC26X2_SDK__2.30.00.34::xdctools__3.61.00.16&path=Software/SimpleLink CC13x2 26x2 SDK/Examples/Development Tools/CC26x2R LaunchPad/BLE5-Stack/project_zero/TI-RTOS/CCS Compiler/project_zero/OAD&removeoffline=true",
+    "packageOrder": 273
+  },
+  {
+    "text": "Profiles",
+    "type": "folder",
+    "numChildren": 0,
+    "numChildrenLocal": 12,
+    "children": true,
+    "state": {
+      "opened": false
+    },
+    "packageUId": "com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35",
+    "url": "/api/resources?path=Software/SimpleLink%20CC13x2%2026x2%20SDK/Examples/Development%20Tools/CC26x2R%20LaunchPad/BLE5-Stack/project_zero/TI-RTOS/CCS%20Compiler/project_zero&package=com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35::arm.gnu__9.2.1::com.ti.SIMPLELINK_CC2640R2_SDK__4.10.00.10::com.ti.SIMPLELINK_CC26X2_SDK__2.30.00.34::xdctools__3.61.00.16",
+    "downloadLink": "api/bundle?vid=com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35&download=true",
+    "makeofflineLink": "api/bundles?vids=com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35",
+    "removeofflineLink": "api/resources?package=arm.gnu__9.2.1::com.ti.SIMPLELINK_ACADEMY_CC13X2_26X2_SDK__4.20.00.00::com.ti.SIMPLELINK_ACADEMY_CC2640R2SDK__4.10.01.00::com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35::com.ti.SIMPLELINK_CC2640R2_SDK__4.10.00.10::com.ti.SIMPLELINK_CC26X2_SDK__2.30.00.34::xdctools__3.61.00.16&path=Software/SimpleLink CC13x2 26x2 SDK/Examples/Development Tools/CC26x2R LaunchPad/BLE5-Stack/project_zero/TI-RTOS/CCS Compiler/project_zero/Profiles&removeoffline=true",
+    "packageOrder": 273
+  },
+  {
+    "text": "Startup",
+    "type": "folder",
+    "numChildren": 0,
+    "numChildrenLocal": 7,
+    "children": true,
+    "state": {
+      "opened": false
+    },
+    "packageUId": "com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35",
+    "url": "/api/resources?path=Software/SimpleLink%20CC13x2%2026x2%20SDK/Examples/Development%20Tools/CC26x2R%20LaunchPad/BLE5-Stack/project_zero/TI-RTOS/CCS%20Compiler/project_zero&package=com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35::arm.gnu__9.2.1::com.ti.SIMPLELINK_CC2640R2_SDK__4.10.00.10::com.ti.SIMPLELINK_CC26X2_SDK__2.30.00.34::xdctools__3.61.00.16",
+    "downloadLink": "api/bundle?vid=com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35&download=true",
+    "makeofflineLink": "api/bundles?vids=com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35",
+    "removeofflineLink": "api/resources?package=arm.gnu__9.2.1::com.ti.SIMPLELINK_ACADEMY_CC13X2_26X2_SDK__4.20.00.00::com.ti.SIMPLELINK_ACADEMY_CC2640R2SDK__4.10.01.00::com.ti.SIMPLELINK_CC13X2_26X2_SDK__4.20.00.35::com.ti.SIMPLELINK_CC2640R2_SDK__4.10.00.10::com.ti.SIMPLELINK_CC26X2_SDK__2.30.00.34::xdctools__3.61.00.16&path=Software/SimpleLink CC13x2 26x2 SDK/Examples/Development Tools/CC26x2R LaunchPad/BLE5-Stack/project_zero/TI-RTOS/CCS Compiler/project_zero/Startup&removeoffline=true",
+    "packageOrder": 273
+  }
+]

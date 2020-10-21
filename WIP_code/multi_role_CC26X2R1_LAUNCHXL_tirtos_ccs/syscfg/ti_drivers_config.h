@@ -84,6 +84,13 @@ extern const uint_least8_t          CONFIG_GPIO_BTN1_CONST;
 extern const uint_least8_t          CONFIG_GPIO_BTN2_CONST;
 #define CONFIG_GPIO_BTN2            1
 
+extern const uint_least8_t          CONFIG_GPIO_RLED_CONST;
+#define CONFIG_GPIO_RLED               2
+
+extern const uint_least8_t          CONFIG_GPIO_0_CONST;
+#define CONFIG_GPIO_0               3
+
+
 /* LEDs are active high */
 #define CONFIG_GPIO_LED_ON  (1)
 #define CONFIG_GPIO_LED_OFF (0)
@@ -115,6 +122,10 @@ extern const PIN_Config BoardGpioInitTable[];
 #define CONFIG_PIN_BTN1    0x0000000d
 /* LaunchPad Button BTN-2 (Right), Parent Signal: CONFIG_GPIO_BTN2 GPIO Pin, (DIO14) */
 #define CONFIG_PIN_BTN2    0x0000000e
+/* Parent Signal: CONFIG_GPIO_0 GPIO Pin (DIO0) */
+#define CONFIG_PIN_RLED        0x00000006
+/* Parent Signal: CONFIG_GPIO_0 GPIO Pin (DIO0) */
+#define CONFIG_PIN_0        0x00000000
 
 
 

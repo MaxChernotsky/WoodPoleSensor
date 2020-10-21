@@ -142,6 +142,7 @@ int main()
   halAssertCback = AssertHandler;
 
   Board_initGeneral();
+  //PIN_init(BoardGpioInitTable);
 
   // Enable iCache prefetching
   VIMSConfigure(VIMS_BASE, TRUE, TRUE);

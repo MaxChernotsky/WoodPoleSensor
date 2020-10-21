@@ -161,14 +161,30 @@ typedef enum {
 
 
 //SNV predefines
+volatile uint32_t myNiceValue = 0x02;
+
+
+//LED initialisation requirements
+
+static PIN_Handle ledPinHandle;
+static PIN_State ledPinState;
+
+
+PIN_Config ledPinTable[] = {
+      CONFIG_PIN_RLED | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW | PIN_PUSHPULL | PIN_DRVSTR_MAX,
+      CONFIG_PIN_0 | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW | PIN_PUSHPULL | PIN_DRVSTR_MAX,
+      PIN_TERMINATE
+};
+
+
+
 #define BUF_LEN 4
 #define SNV_ID_APP 0x80
-uint8 buf[BUF_LEN] = {0,};
-
+uint8 buf[BUF_LEN] ={0,};
 
 
 char ownDevAlpha = 'A';
-char ownDevNum = '2';
+char ownDevNum = '1';
 
 //placeholders...
 char targetDevAlpha = 'X';
@@ -647,9 +663,39 @@ static void multi_role_init(void)
   // so that the application can send and receive messages.
   ICall_registerApp(&selfEntity, &syncEvent);
 
+
+  /*
+  //osal snv test
+  Log_info1("nicevalue %d", myNiceValue);
+
+    uint8 status;
+    status = osal_snv_read(0x80, sizeof(myNiceValue), &myNiceValue);
+    Log_info1("status: %d", status);
+
+  if (0 != osal_snv_read(0x80, sizeof(myNiceValue), &myNiceValue)){
+      Log_info0("Inside");
+      uint32_t defaultValue = 0xABBABEEF;
+      osal_snv_write(0x80, sizeof(defaultValue), &defaultValue);
+  }//end if
+   */
+
+
   // Open Display.
   //dispHandle = Display_open(Display_Type_ANY, NULL);
   Log_info0("Board Booting up...");
+
+  // ******************************************************************
+  // Hardware initialization
+  // ******************************************************************
+
+  //open LED pins
+  ledPinHandle = PIN_open(&ledPinState, ledPinTable);
+
+  //error handlers
+  if (!ledPinHandle){
+      Log_error0("Error initialising board LED pins");
+  }//end if
+
 
 
   Log_info2("Current Device ID in ASCII (alpha, num): %d, %d", (int)ownDevAlpha, (int)ownDevNum);
@@ -786,29 +832,37 @@ static void multi_role_taskFxn(UArg a0, UArg a1)
   // Initialize application
   multi_role_init();
 
-
-  //snv code
+  //osal snv application code
   uint8 status = SUCCESS;
 
-  status = osal_snv_read(SNV_ID_APP, BUF_LEN, (uint8 *)buf);
+    //attempt to read the SNV
+    status = osal_snv_read(SNV_ID_APP, BUF_LEN, (uint8 *)buf);
 
-  if (status != SUCCESS){
-      Log_info1("SNV READ FAIL: %d", status);
+    //if the status != SUCCESS
+    if(status != SUCCESS)
+    {
+        Log_info1("SNV READ FAIL: %d", status);
 
-      //write first time to initialise SNV ID
+        //Write first time to initialize SNV ID
       osal_snv_write(SNV_ID_APP, BUF_LEN, (uint8 *)buf);
-  }//end if
+    }
 
-  buf[0]++;
-  status = osal_snv_write(SNV_ID_APP, BUF_LEN, (uint8 *)buf);
+    //Increment first element of array and write to SNV flash
+    buf[0]++;
+    status = osal_snv_write(SNV_ID_APP, BUF_LEN, (uint8 *)buf);
+    if(status != SUCCESS)
+    {
+      //Display_print1(dispHandle, 0, 0, "SNV WRITE FAIL: %d", status);
+        Log_info1("SNV READ FAIL: %d", status);
 
-  if (status != SUCCESS){
-      Log_info1("SNV READ FAIL: %d", status);
-  }//end if
-
-  else {
+    }
+    else
+    {
+      //Display_print1(dispHandle, 0, 0, "Num of Resets: %d", buf[0]);
       Log_info1("Num of Resets: %d", buf[0]);
-  }//end else
+    }
+
+
 
   // Application main loop
   for (;;)
@@ -2267,7 +2321,6 @@ static void multi_role_addSurroundingScanInfo(uint8_t txPower, char *receivedDat
 
     Log_info4(ANSI_COLOR(FG_BLUE) "Dev No: %d" ANSI_COLOR(ATTR_RESET)  ", devAlpha: %d, devNum: %d, txPower: %d", numSurroundingScanRes, surroundingDevs[numSurroundingScanRes].devAlpha , surroundingDevs[numSurroundingScanRes].devNum, surroundingDevs[numSurroundingScanRes].txPower);
 
-
     numSurroundingScanRes++;
 }//end addSurroundingScanInfo function
 
@@ -2555,6 +2608,10 @@ static void multi_role_handleKeys(uint8_t keys)
     // Check if the key is still pressed
     if (PIN_getInputValue(CONFIG_PIN_BTN1) == 0)
     {
+        //left button handler
+        /*
+         *commented out to test another function
+
         //multi_role_serviceDiscovery(0);
         Log_info0("Left Button Press");
 
@@ -2567,7 +2624,24 @@ static void multi_role_handleKeys(uint8_t keys)
 
         multi_role_doDiscoverDevices();
 
-        //left button handler
+        */
+
+
+        //Log_info0("Write to SNV");
+        //uint8_t myBuffer = {124};
+
+        //testpin output
+        Log_info0("Setting GPIO0 HIGH");
+
+        //open the pins
+        //hGpioPins = PIN_open(&gpioPins, BoardGpioInitTable);
+
+        //PIN_setOutputValue(gpioPinHandle, CONFIG_GPIO_0, 1);
+        PIN_setOutputValue(ledPinHandle, CONFIG_PIN_RLED, 1);
+        PIN_setOutputValue(ledPinHandle, CONFIG_PIN_0, 1);
+
+
+
     }
   }
   else if (keys & KEY_RIGHT)
@@ -2578,8 +2652,13 @@ static void multi_role_handleKeys(uint8_t keys)
     {
       //right button handler
       //multi_role_doConnect(0);
-        timerStarted = false;
-        multi_role_tickSend();
+
+
+        //timerStarted = false;
+        //multi_role_tickSend();
+
+        PIN_setOutputValue(ledPinHandle, CONFIG_PIN_RLED, 0);
+        PIN_setOutputValue(ledPinHandle, CONFIG_PIN_0, 0);
 
     }
   }
