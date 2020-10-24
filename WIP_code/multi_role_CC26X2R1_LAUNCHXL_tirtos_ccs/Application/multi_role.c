@@ -183,8 +183,29 @@ PIN_Config ledPinTable[] = {
 uint8 buf[BUF_LEN] ={0,};
 
 
+//custom task function
+#define NVM_TASK_STACK_SIZE          800
+Task_Struct nvmTask;
+Char nvmTaskStack[NVM_TASK_STACK_SIZE];
+
+// Entity ID globally used to check for source and/or destination of messages
+static ICall_EntityID nvmEntity;
+
+// Event globally used to post local events and pend on system and
+// local events.
+static ICall_SyncHandle nvmEvent;
+
+//status variable for nvmTask
+uint8 nvm_status;
+
+//function for write buffer and read buffer
+uint8 nvmWriteBuf[10];
+uint8 nvmReadBuf[10];
+
+
+
 char ownDevAlpha = 'A';
-char ownDevNum = '1';
+char ownDevNum = '2';
 
 //placeholders...
 char targetDevAlpha = 'X';
@@ -574,6 +595,10 @@ static void multi_role_addSurroundingScanInfo(uint8_t txPower, char *receivedDat
 static void multi_role_currentDeviceStatusCheck (void);
 static void multi_role_findDeviceFromList (int numFound, int deviceToFind, int directionOfDevice);
 
+//custom nvm task functions
+
+void multi_role_nvmTaskFxn(UArg a0, UArg a1);
+
 /*********************************************************************
  * EXTERN FUNCTIONS
 */
@@ -638,6 +663,21 @@ void multi_role_createTask(void)
 
   Task_construct(&mrTask, multi_role_taskFxn, &taskParams, NULL);
 }
+
+
+//create task for nvm functions
+void multi_role_nvmCreateTask(void){
+    Task_Params taskParams;
+
+    // Configure task
+    Task_Params_init(&taskParams);
+    taskParams.stack = nvmTaskStack;
+    taskParams.stackSize = MR_TASK_STACK_SIZE;
+    taskParams.priority = 2;
+
+    //second input to function shows which function will be called
+    Task_construct(&nvmTask, multi_role_nvmTaskFxn, &taskParams, NULL);
+}//end multi_role_nvmCreateTask
 
 /*********************************************************************
 * @fn      multi_role_init
@@ -846,6 +886,10 @@ static void multi_role_taskFxn(UArg a0, UArg a1)
         //Write first time to initialize SNV ID
       osal_snv_write(SNV_ID_APP, BUF_LEN, (uint8 *)buf);
     }
+
+    if (status == SUCCESS){
+        Log_info1("SNV READ SUCCESS: %d", status);
+    }//end if
 
     //Increment first element of array and write to SNV flash
     buf[0]++;
@@ -1673,7 +1717,7 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
       //Log_info1("prescan ntime: %d", ntimePreScan);
 
       ticksPreScan = Clock_getTicks();
-      //Log_info1("current clock ticks: %d", ticksPreScan);
+      Log_info1("current clock ticks: %d", ticksPreScan);
 
 
 
@@ -1681,7 +1725,6 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
 #if (DEFAULT_DEV_DISC_BY_SVC_UUID == TRUE)
       if (multi_role_findSvcUuid(SIMPLEPROFILE_SERV_UUID, pAdvRpt->pData, pAdvRpt->dataLen))
       {
-          Log_info0("-----------------------------------");
           Log_info0(ANSI_COLOR(FG_GREEN) "Showing Devices with 0xFFF0:" ANSI_COLOR(ATTR_RESET));
 
           //receive incoming advertDataReport and save as char array
@@ -1695,7 +1738,7 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
           char manuDataOnly[25];
           strncpy(manuDataOnly, allData+33, sizeof(allData));
 
-          Log_info1("All Data Printout: %s", (uintptr_t)outputData);
+          Log_info1("Full Data: %s", (uintptr_t)outputData);
 
           //adjust data to print in uartLog - UNUSED ATM
           memcpy(manuToPrint, manuDataOnly, sizeof(manuDataOnly)+1);
@@ -1800,7 +1843,7 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
       static uint8_t* pAddrs = NULL;
       uint8_t* pAddrTemp;
 
-      Log_info0(ANSI_COLOR(FG_RED) "Scanning Disabled" ANSI_COLOR(ATTR_RESET));
+
 
 #if (DEFAULT_DEV_DISC_BY_SVC_UUID == TRUE)
       numReport = numScanRes;
@@ -1842,8 +1885,8 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
         }//end for loop
       }//end pAddrs if statement
 
-
-      Log_info1("Scanning stopped: numReport = %d", numReport);
+      Log_info1(ANSI_COLOR(FG_RED) "Scanning Disabled" ANSI_COLOR(ATTR_RESET) " - NumDevs: %d", numReport);
+      //Log_info1("Scanning stopped: numReport = %d", numReport);
 
       //will run when timeClient is needed
       //will isolate the time and delay from the advertData
@@ -1938,6 +1981,10 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
     //function that will be used to perform time sensitive tasks
     case MR_EVT_SECONDSSET:
     {
+
+        //set the GPIO output high to signify the 15 second interval
+        PIN_setOutputValue(ledPinHandle, CONFIG_PIN_0, 1);
+
         //called periodically
         timerStarted = true;
         correctDevice = false;
@@ -2062,27 +2109,27 @@ static void multi_role_processAdvEvent(mrGapAdvEventData_t *pEventData)
 
       if ((tickServer==true) && (count<1))
       {
-          //get current tick value of clock
-          ticksPostAdv = Clock_getTicks();
-          //Log_info1("ticksPostAdv %d", ticksPostAdv);
-
           //need to include the current clock values in advertising
           Log_info1("Scan Delay (RX+TX): %d", combinedTickDelay);
+
+          //get current tick value of clock
+          ticksPostAdv = Clock_getTicks();
+          Log_info1("ticksPostAdv %d", ticksPostAdv);
 
           //determine tick difference
           uint32_t ticksDiffAdv = ticksPostAdv - ticksPreAdv;
           Log_info1("Ticks Diff Before Adv: %d", ticksDiffAdv);
 
-
           Log_info3("Previous TX+RX (%d) + current TX (%d) = %d", combinedTickDelay, ticksDiffAdv, ticksDiffAdv+combinedTickDelay);
-          Log_info0("------------------------------------");
+          //Log_info0("------------------------------------");
+
           //if first device only
           if (ownDevNum == '1' && ownDevAlpha == 'A') {
               combinedTickDelay = 0;
-          }
+          }//end if
 
           //include the previous delays in the ticksDiffAdv variable
-          ticksDiffAdv = ticksDiffAdv + combinedTickDelay;
+          ticksDiffAdv = ticksDiffAdv + combinedTickDelay + 165; //additional 165 is to account for the delays in the processing after the ticks have been called
 
           //convert diff into hex
           char tempTickHexDelay [4];
@@ -2114,6 +2161,10 @@ static void multi_role_processAdvEvent(mrGapAdvEventData_t *pEventData)
           //timeServer=false;
           //Log_info2("Count[%d]: Diff: %d", count, ticksDiffAdv);
           count = count+1;
+
+          //Adding the information to the advData adds another 165 ticks
+          //will add the "additional" ticks onto the time sent out
+          //Log_info1("End of processAdvEvent: %d", Clock_getTicks() - ticksPostAdv);
 
       }//end if for tickServer isolation
 
@@ -2609,8 +2660,9 @@ static void multi_role_handleKeys(uint8_t keys)
     if (PIN_getInputValue(CONFIG_PIN_BTN1) == 0)
     {
         //left button handler
+
         /*
-         *commented out to test another function
+         //commented out to test another function
 
         //multi_role_serviceDiscovery(0);
         Log_info0("Left Button Press");
@@ -2624,22 +2676,31 @@ static void multi_role_handleKeys(uint8_t keys)
 
         multi_role_doDiscoverDevices();
 
-        */
+         */
 
 
         //Log_info0("Write to SNV");
         //uint8_t myBuffer = {124};
 
         //testpin output
-        Log_info0("Setting GPIO0 HIGH");
+        //Log_info0("Setting GPIO0 HIGH");
 
         //open the pins
         //hGpioPins = PIN_open(&gpioPins, BoardGpioInitTable);
 
         //PIN_setOutputValue(gpioPinHandle, CONFIG_GPIO_0, 1);
-        PIN_setOutputValue(ledPinHandle, CONFIG_PIN_RLED, 1);
-        PIN_setOutputValue(ledPinHandle, CONFIG_PIN_0, 1);
+        //PIN_setOutputValue(ledPinHandle, CONFIG_PIN_RLED, 1);
+        //PIN_setOutputValue(ledPinHandle, CONFIG_PIN_0, 1);
 
+
+        //set the buffer to a specific value
+        Log_info1("Buf Pre: %d", buf[0]);
+        buf[0]++;
+        buf[0]++;
+        buf[0]++;
+        Log_info1("Buf post: %d", buf[0]);
+
+        osal_snv_write(SNV_ID_APP, BUF_LEN, (uint8 *)buf);
 
 
     }
@@ -2657,8 +2718,8 @@ static void multi_role_handleKeys(uint8_t keys)
         //timerStarted = false;
         //multi_role_tickSend();
 
-        PIN_setOutputValue(ledPinHandle, CONFIG_PIN_RLED, 0);
-        PIN_setOutputValue(ledPinHandle, CONFIG_PIN_0, 0);
+        //PIN_setOutputValue(ledPinHandle, CONFIG_PIN_RLED, 0);
+        //PIN_setOutputValue(ledPinHandle, CONFIG_PIN_0, 0);
 
     }
   }
@@ -3194,8 +3255,6 @@ static uint8_t multi_role_removeConnInfo(uint16_t connHandle)
 */
 void multi_role_doDiscoverDevices(void)
 {
-    //Log_info0("Left Button Pressed");
-
 
 #if (DEFAULT_DEV_DISC_BY_SVC_UUID == TRUE)
   // Scanning for DEFAULT_SCAN_DURATION x 10 ms.
@@ -3711,10 +3770,12 @@ static void multi_role_tickSend (void){
     }
     //get preAdv clock time - as advertising starts
     ticksPreAdv = Clock_getTicks();
-    //Log_info1("ticksPreAdv %d", ticksPreAdv);
+    Log_info1("ticksPreAdv %d", ticksPreAdv);
 
     tickServer = true;
     timeClient = false;
+
+    PIN_setOutputValue(ledPinHandle, CONFIG_PIN_0, 0);
 
     //enable advertising
     GapAdv_enable(advHandleTicks, GAP_ADV_ENABLE_OPTIONS_USE_MAX_EVENTS, 1);
@@ -3833,17 +3894,17 @@ static void multi_role_tickIsolation (void) {
 
     uint32_t txDelay = 0;
     txDelay = firstInt;
-    //txDelay = firstInt*100+secondInt;
     Log_info1("TX Delay: %d", txDelay);
-
 
     //tick RX delay calculation
     ticksPostScan = Clock_getTicks();
+    Log_info1("ticksPostScan %d",  ticksPostScan);
     uint32_t ticksDiffScan = ticksPostScan - ticksPreScan;
     Log_info1("RX Delay: %d", ticksDiffScan);
     //Log_info2("prescan (%d) --- postscan (%d)",  ticksPreScan, ticksPostScan);
 
     //save the combined delay to a global variable to be used in the advertising phase
+    //txDelay0 - received delay from the previous device
     combinedTickDelay = txDelay + ticksDiffScan;
 
     //log information for debugging purposes
@@ -3860,7 +3921,14 @@ static void multi_role_tickIsolation (void) {
 
     if (timerStarted == false) {
         //update the clock period accordingly
+        Log_info1("right before change fo clock: %d", Clock_getTicks());
         Util_restartClock(&clkTimeSync, startingTimeClock);
+    }//end if
+
+    if (timerStarted == true){
+        Log_info1("TRUE: right before change of clock: %d", Clock_getTicks());
+        Util_restartClock(&clkSecondsSet, startingTimeClock);
+
     }//end if
 
     //perform processing here:
@@ -4135,6 +4203,30 @@ static void multi_role_findDeviceFromList (int numFound, int deviceToFind, int d
 
 
 }//end multi_role_findDeviceFromList
+
+
+void multi_role_nvmTaskFxn(UArg a0, UArg a1){
+
+    ICall_registerApp(&nvmEntity, &nvmEvent);
+
+    while(1){
+
+        nvmWriteBuf[1] = 0x12;
+        nvmWriteBuf[2] = 0x12;
+
+        //write(memory addr, length, data)
+        nvm_status = osal_snv_write(0x80, 10, (uint8_t *)nvmWriteBuf);
+
+        nvmReadBuf[1] = 0x00;
+        nvmReadBuf[2] = 0x00;
+
+        nvm_status = osal_snv_read(0x80, 10, (uint8_t *)nvmReadBuf);
+
+
+
+    }//end while loop
+
+}//end multi_role_nvmTaskFxn
 
 /*********************************************************************
 *********************************************************************/

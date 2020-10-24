@@ -129,7 +129,6 @@ extern const PIN_Config BoardGpioInitTable[];
 
 
 
-
 /*
  *  ======== TRNG ========
  */

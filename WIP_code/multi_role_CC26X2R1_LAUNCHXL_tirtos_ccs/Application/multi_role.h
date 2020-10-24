@@ -79,6 +79,10 @@ extern "C"
  */
 extern void multi_role_createTask(void);
 
+//custom function call
+extern void multi_role_nvmCreateTask(void);
+
+
 /* Action for Menu: Enable Scanning */
 void multi_role_doDiscoverDevices(void);
 
