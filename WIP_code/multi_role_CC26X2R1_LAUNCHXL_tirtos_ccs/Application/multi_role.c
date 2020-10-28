@@ -1154,6 +1154,7 @@ static void multi_role_processGapMsg(gapEventHdr_t *pMsg)
       //-----// DEVICE INITIALISATION SETUP //-----//
 
       devState = 0;
+      printf("pls work here thanks\n");
 
       if (devState == 0){
           Log_info0(ANSI_COLOR(FG_GREEN) "Device Status: Initialisation State" ANSI_COLOR(ATTR_RESET));
@@ -2660,12 +2661,14 @@ static void multi_role_handleKeys(uint8_t keys)
     if (PIN_getInputValue(CONFIG_PIN_BTN1) == 0)
     {
         //left button handler
+        Log_info0("Left Button Pressed");
 
         /*
          //commented out to test another function
 
+
         //multi_role_serviceDiscovery(0);
-        Log_info0("Left Button Press");
+
 
         timerStarted = false;
         timeClient = true;
@@ -2712,6 +2715,9 @@ static void multi_role_handleKeys(uint8_t keys)
     if (rtnVal == 0)
     {
       //right button handler
+        Log_info0("Right Button Pressed");
+
+        nvmWriteBuf[1] = 0x20;
       //multi_role_doConnect(0);
 
 
@@ -4210,17 +4216,31 @@ void multi_role_nvmTaskFxn(UArg a0, UArg a1){
     ICall_registerApp(&nvmEntity, &nvmEvent);
 
     while(1){
+        Task_sleep(1500000); //100000 - 1 second
 
-        nvmWriteBuf[1] = 0x12;
-        nvmWriteBuf[2] = 0x12;
+        nvm_status = osal_snv_read(0x80, 10, (uint8_t *)nvmReadBuf);
 
-        //write(memory addr, length, data)
+
+        if (nvm_status != SUCCESS){
+            //initial write
+            Log_info0("Initial Write");
+            nvmWriteBuf[1] = 0x12;
+            nvmWriteBuf[2] = 0x12;
+
+            //write(memory addr, length, data)
+            nvm_status = osal_snv_write(0x80, 10, (uint8_t *)nvmWriteBuf);
+        }//end if
+
         nvm_status = osal_snv_write(0x80, 10, (uint8_t *)nvmWriteBuf);
 
         nvmReadBuf[1] = 0x00;
         nvmReadBuf[2] = 0x00;
 
         nvm_status = osal_snv_read(0x80, 10, (uint8_t *)nvmReadBuf);
+
+
+        //output read values:
+        Log_info1("ReadBuf1: %d", nvmReadBuf[1]);
 
 
 

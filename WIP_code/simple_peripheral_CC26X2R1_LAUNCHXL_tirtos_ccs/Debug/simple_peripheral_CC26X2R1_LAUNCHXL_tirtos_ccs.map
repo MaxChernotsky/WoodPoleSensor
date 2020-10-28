@@ -1,7 +1,7 @@
 ******************************************************************************
                   TI ARM Linker Unix v18.12.6                  
 ******************************************************************************
->> Linked Tue Sep  1 23:25:30 2020
+>> Linked Mon Oct 26 21:13:25 2020
 
 OUTPUT FILE NAME:   <simple_peripheral_CC26X2R1_LAUNCHXL_tirtos_ccs.out>
 ENTRY POINT SYMBOL: "ResetISR"  address: 000127c1
@@ -1682,7 +1682,7 @@ MODULE SUMMARY
        Total:                              1624    0         0      
                                                                     
     /var/tmp/
-       TI4DL9uwfCU                         0       0         1029   
+       TI0o6IamsP7                         0       0         1029   
     +--+-----------------------------------+-------+---------+---------+
        Total:                              0       0         1029   
                                                                     
