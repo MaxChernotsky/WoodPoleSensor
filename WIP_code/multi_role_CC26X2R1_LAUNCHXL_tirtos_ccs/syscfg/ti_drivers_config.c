@@ -296,6 +296,51 @@ const GPIOCC26XX_Config GPIOCC26XX_config = {
     .intPriority = (~0)
 };
 
+/*
+ *  =============================== I2C ===============================
+ */
+
+#include <ti/drivers/I2C.h>
+#include <ti/drivers/i2c/I2CCC26XX.h>
+#include <ti/drivers/power/PowerCC26XX.h>
+
+#define CONFIG_I2C_COUNT 1
+
+/*
+ *  ======== i2cCC26xxObjects ========
+ */
+I2CCC26XX_Object i2cCC26xxObject[CONFIG_I2C_COUNT];
+
+/*
+ *  ======== i2cCC26xxHWAttrs ========
+ */
+const I2CCC26XX_HWAttrsV1 i2cCC26xxHWAttrs[CONFIG_I2C_COUNT] = {
+   /* CONFIG_I2C_0 */
+   {
+        .baseAddr       = I2C0_BASE,
+        .powerMngrId    = PowerCC26XX_PERIPH_I2C0,
+        .intNum         = INT_I2C_IRQ,
+        .intPriority    = (~0),
+        .swiPriority    = 0,
+        .sclPin         = IOID_4,
+        .sdaPin         = IOID_5
+   },
+};
+
+/*
+ *  ======== I2C_config ========
+ */
+const I2C_Config I2C_config[CONFIG_I2C_COUNT] = {
+   /* CONFIG_I2C_0 */
+   {
+     .fxnTablePtr   = &I2CCC26XX_fxnTable,
+     .object        = &i2cCC26xxObject[CONFIG_I2C_0],
+     .hwAttrs       = &i2cCC26xxHWAttrs[CONFIG_I2C_0]
+   },
+};
+
+const uint_least8_t CONFIG_I2C_0_CONST = CONFIG_I2C_0;
+const uint_least8_t I2C_count = CONFIG_I2C_COUNT;
 
 /*
  *  =============================== NVS ===============================
@@ -372,7 +417,7 @@ const uint_least8_t NVS_count = CONFIG_NVS_COUNT;
 #include <ti/drivers/PIN.h>
 #include <ti/drivers/pin/PINCC26XX.h>
 
-#define CONFIG_PIN_COUNT 7
+#define CONFIG_PIN_COUNT 9
 
 const PIN_Config BoardGpioInitTable[CONFIG_PIN_COUNT + 1] = {
     /* XDS110 UART, Parent Signal: CONFIG_DISPLAY_UART TX, (DIO3) */
@@ -388,6 +433,13 @@ const PIN_Config BoardGpioInitTable[CONFIG_PIN_COUNT + 1] = {
 
     /* DIO0*/
     CONFIG_PIN_0 | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW | PIN_PUSHPULL | PIN_DRVSTR_MED,
+
+    //i2c
+
+    /* Parent Signal: CONFIG_I2C_0 SDA, (DI05) */
+    CONFIG_PIN_1 | PIN_INPUT_EN | PIN_PULLUP | PIN_IRQ_DIS,
+    /* Parent Signal: CONFIG_I2C_0 SCL, (DI06) */
+    CONFIG_PIN_2 | PIN_INPUT_EN | PIN_PULLUP | PIN_IRQ_DIS,
 
     PIN_TERMINATE
 };

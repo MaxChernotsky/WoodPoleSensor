@@ -98,6 +98,29 @@ extern const uint_least8_t          CONFIG_GPIO_0_CONST;
 #define CONFIG_LED_ON  (CONFIG_GPIO_LED_ON)
 #define CONFIG_LED_OFF (CONFIG_GPIO_LED_OFF)
 
+/*
+ *  ======== I2C ========
+ */
+
+/*
+ * SCL: DIO4
+ * SDA: DIO5
+ */
+
+extern const uint_least8_t          CONFIG_I2C_0_CONST;
+#define CONFIG_I2C_0                0
+
+/* ======== I2C Addresses and Speeds ======== */
+#include <ti/drivers/I2C.h>
+
+/* ---- CONFIG_I2C_0 I2C bus components ---- */
+
+/* no components connected to CONFIG_I2C_0 */
+
+/* max speed unspecified, defaulting to 100 Kbps */
+#define CONFIG_I2C_0_MAXSPEED (100U) /* Kbps */
+#define CONFIG_I2C_0_MAXBITRATE ((I2C_BitRate)I2C_100kHz)
+
 
 /*
  *  ======== NVS ========
@@ -126,6 +149,10 @@ extern const PIN_Config BoardGpioInitTable[];
 #define CONFIG_PIN_RLED        0x00000006
 /* Parent Signal: CONFIG_GPIO_0 GPIO Pin (DIO0) */
 #define CONFIG_PIN_0        0x00000000
+/* Parent Signal: CONFIG_I2C_0 SDA, (DIO5) */
+#define CONFIG_PIN_1        0x00000005
+/* Parent Signal: CONFIG_I2C_0 SCL, (DIO4) */
+#define CONFIG_PIN_2        0x00000004
 
 
 

@@ -176,7 +176,7 @@ int main()
   multi_role_createTask();
 
   //call nvmTask
-  multi_role_nvmCreateTask();
+  //multi_role_nvmCreateTask();
 
   /* enable interrupts and start SYS/BIOS */
   BIOS_start();

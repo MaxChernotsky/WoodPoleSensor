@@ -88,6 +88,9 @@ Target Device: cc13x2_26x2
 
 #include <ti/sysbios/family/arm/cc26xx/Seconds.h>
 
+//custom libraries
+#include <Sensor_Libraries/MMC5983MA.h>
+
 /*********************************************************************
  * MACROS
  */
@@ -177,6 +180,10 @@ PIN_Config ledPinTable[] = {
 };
 
 
+//I2C initialisations
+#define SENSORS 0
+
+
 
 #define BUF_LEN 4
 #define SNV_ID_APP 0x80
@@ -198,14 +205,13 @@ static ICall_SyncHandle nvmEvent;
 //status variable for nvmTask
 uint8 nvm_status;
 
-//function for write buffer and read buffer
-uint8 nvmWriteBuf[10];
-uint8 nvmReadBuf[10];
+//function to store information for read and writes
+uint8 nvmBuf[10];
 
 
 
 char ownDevAlpha = 'A';
-char ownDevNum = '2';
+char ownDevNum = '3';
 
 //placeholders...
 char targetDevAlpha = 'X';
@@ -265,6 +271,8 @@ bool tickServer = false;
 bool postAdvScan = false;
 
 bool correctDevice = false;
+
+bool timeSyncCalled = false;
 
 //current device status
 uint8_t deviceStatus = 0;
@@ -768,6 +776,17 @@ static void multi_role_init(void)
   // Init key debouncer
   Board_initKeys(multi_role_keyChangeHandler);
 
+
+  //configure I2C parameters
+  I2C_init();
+
+  //I2C_Params params;
+  //I2C_Params_init(&params);
+  //params.bitRate = I2C_400kHz;
+
+
+
+
   // Initialize Connection List
   multi_role_clearConnListEntry(LINKDB_CONNHANDLE_ALL);
 
@@ -872,6 +891,8 @@ static void multi_role_taskFxn(UArg a0, UArg a1)
   // Initialize application
   multi_role_init();
 
+  /*
+
   //osal snv application code
   uint8 status = SUCCESS;
 
@@ -906,7 +927,7 @@ static void multi_role_taskFxn(UArg a0, UArg a1)
       Log_info1("Num of Resets: %d", buf[0]);
     }
 
-
+*/
 
   // Application main loop
   for (;;)
@@ -1708,7 +1729,7 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
     case MR_EVT_ADV_REPORT:
     {
       GapScan_Evt_AdvRpt_t* pAdvRpt = (GapScan_Evt_AdvRpt_t*) (pMsg->pData);
-      Log_info0("In Advertising Report...");
+      //Log_info0("In Advertising Report...");
 
       //unused - code to get the current time of device to be used for comparison
       //Seconds_getTime(&ts);
@@ -1718,7 +1739,7 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
       //Log_info1("prescan ntime: %d", ntimePreScan);
 
       ticksPreScan = Clock_getTicks();
-      Log_info1("current clock ticks: %d", ticksPreScan);
+      Log_info1("Ticks (start AdvReport): %d", ticksPreScan);
 
 
 
@@ -1726,6 +1747,13 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
 #if (DEFAULT_DEV_DISC_BY_SVC_UUID == TRUE)
       if (multi_role_findSvcUuid(SIMPLEPROFILE_SERV_UUID, pAdvRpt->pData, pAdvRpt->dataLen))
       {
+          if (postAdvScan == true){
+              Log_info0("PostAdvScan: True");
+          }//end if
+
+          if (postAdvScan != true){
+              Log_info0("PostAdvScan: False");
+          }//end if
           Log_info0(ANSI_COLOR(FG_GREEN) "Showing Devices with 0xFFF0:" ANSI_COLOR(ATTR_RESET));
 
           //receive incoming advertDataReport and save as char array
@@ -1751,22 +1779,25 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
 
 
           /*
-           * NOT WORKING ATM
+           * POST ADV SCAN
            */
 
           //check if the next pole has received the outgoing advert
           if (postAdvScan == true){
-              Log_info0("Checking if next pole has received the data...");
               //need to check if the incoming advert data is from the pole down the line from the current pole
-              bool followingDevice = isFollowingDevice(manuDataOnly, ownDevAlpha, ownDevNum);
+              uint8_t followingDevice = isFollowingDevice(manuDataOnly, ownDevAlpha, ownDevNum);
 
-              if (followingDevice){
-                  Log_info0("Device down the line received data - disabling scanning, entering sleep mode");
+              if (followingDevice == 1){
+                  Log_info0("Following Device: Device received information");
                   GapScan_disable();
               }//end if
 
+              else if (followingDevice == 2){
+                  Log_info0("Following Device: End of line dev");
+              }//end else if
+
               else {
-                  Log_info0("Device down the line did not receive data");
+                  Log_info0("Following Device: Device did NOT received information");
                   GapScan_disable();
 
                   //need to develop code to adjust the target device a second attempt
@@ -1783,7 +1814,7 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
                   Log_info0("Initial: Device Found");
                   multi_role_addSurroundingScanInfo(pAdvRpt->txPower, &manuToPrint);
 
-                  if (numSurroundingScanRes == 1){
+                  if (numSurroundingScanRes == 2){
                       GapScan_disable();
                   }
               }//if the correct device found
@@ -1794,24 +1825,29 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
           //normal pole-to-pole 10 min interval operation
           if (devState == 1 && postAdvScan == false){
 
-              //determine if the advertising report is from the correct device
-              correctDevice = isCorrectDevice(manuDataOnly, ownDevAlpha, ownDevNum, 1); //device = 1 indicates normal operation
-              //bool configDevice = isCorrectDevice(manuDataOnly, ownDevAlpha, ownDevNum, 2) //device = 2 indicates check for configuration device
+
+              Log_info1("datalength: %d", pAdvRpt->dataLen);
+              if (pAdvRpt->dataLen > 15){
+
+                  //determine if the advertising report is from the correct device
+                  correctDevice = isCorrectDevice(manuDataOnly, ownDevAlpha, ownDevNum, 1); //device = 1 indicates normal operation
+                  //bool configDevice = isCorrectDevice(manuDataOnly, ownDevAlpha, ownDevNum, 2) //device = 2 indicates check for configuration device
 
 
-              //determine the advertisement data that will be found in the phone/configuration device
-              //include another statement that will check for the device
-              //normal operation will ensue, following a delayed application event call to connect to the device
+                  //determine the advertisement data that will be found in the phone/configuration device
+                  //include another statement that will check for the device
+                  //normal operation will ensue, following a delayed application event call to connect to the device
 
-              //disable advertising once the correct device is being broadcasted
-              if (correctDevice) {
-                  Log_info0(ANSI_COLOR(FG_GREEN) "Correct Device Found" ANSI_COLOR(ATTR_RESET));
-                  GapScan_disable();
-              }//end if
+                  //disable advertising once the correct device is being broadcasted
+                  if (correctDevice) {
+                      Log_info0(ANSI_COLOR(FG_GREEN) "Correct Device Found" ANSI_COLOR(ATTR_RESET));
+                      GapScan_disable();
+                  }//end if
 
-              else {
-                  Log_info0(ANSI_COLOR(FG_RED) "Incorrect Device Found" ANSI_COLOR(ATTR_RESET));
-              }//end else
+                  else {
+                      Log_info0(ANSI_COLOR(FG_RED) "Incorrect Device Found" ANSI_COLOR(ATTR_RESET));
+                  }//end else
+              }//end if for datalength
           }//end if for devState==1
 
 
@@ -1976,6 +2012,7 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
         GapAdv_disable(advHandleInitialDevice);
         Seconds_set(1599767013);
         Util_startClock(&clkSecondsSet);
+        timeSyncCalled = true;
         break;
     }
 
@@ -1990,7 +2027,13 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
         timerStarted = true;
         correctDevice = false;
         postAdvScan = false;
-        Util_startClock(&clkSecondsSet);
+
+        //if first device start clock normally
+
+        if (ownDevNum == '1' && ownDevAlpha == 'A'){
+            Util_startClock(&clkSecondsSet);
+        }//end if
+
         Seconds_getTime(&ts);
         multi_role_currentDeviceStatusCheck();
 
@@ -2130,7 +2173,7 @@ static void multi_role_processAdvEvent(mrGapAdvEventData_t *pEventData)
           }//end if
 
           //include the previous delays in the ticksDiffAdv variable
-          ticksDiffAdv = ticksDiffAdv + combinedTickDelay + 165; //additional 165 is to account for the delays in the processing after the ticks have been called
+          ticksDiffAdv = ticksDiffAdv + combinedTickDelay + 150 - 300; //additional 165 is to account for the delays in the processing after the ticks have been called
 
           //convert diff into hex
           char tempTickHexDelay [4];
@@ -2165,7 +2208,7 @@ static void multi_role_processAdvEvent(mrGapAdvEventData_t *pEventData)
 
           //Adding the information to the advData adds another 165 ticks
           //will add the "additional" ticks onto the time sent out
-          //Log_info1("End of processAdvEvent: %d", Clock_getTicks() - ticksPostAdv);
+          Log_info1("End of processAdvEvent: %d", Clock_getTicks() - ticksPostAdv);
 
       }//end if for tickServer isolation
 
@@ -2217,6 +2260,13 @@ static void multi_role_processAdvEvent(mrGapAdvEventData_t *pEventData)
       mrIsAdvertising = false;
       //Display_printf(dispHandle, MR_ROW_ADVERTIS, 0, "Adv Set %d Disabled",*(uint8_t *)(pEventData->pBuf));
       Log_info1("Adv Set %d Disabled", *(uint8_t *)(pEventData->pBuf));
+
+
+      //enable postAdvScan
+      if (postAdvScan & timeSyncCalled){
+          GapScan_enable(0, DEFAULT_SCAN_DURATION, 0);
+      }//end if
+
       break;
 
     case GAP_EVT_ADV_START:
@@ -2696,6 +2746,7 @@ static void multi_role_handleKeys(uint8_t keys)
         //PIN_setOutputValue(ledPinHandle, CONFIG_PIN_0, 1);
 
 
+        /*
         //set the buffer to a specific value
         Log_info1("Buf Pre: %d", buf[0]);
         buf[0]++;
@@ -2705,6 +2756,80 @@ static void multi_role_handleKeys(uint8_t keys)
 
         osal_snv_write(SNV_ID_APP, BUF_LEN, (uint8 *)buf);
 
+         */
+
+        //test for I2C connection
+
+        // initialize optional I2C bus parameters
+        I2C_Params params;
+        I2C_Params_init(&params);
+        params.bitRate = I2C_400kHz;
+
+        // Open I2C bus for usage
+        I2C_Handle i2cHandle = I2C_open(SENSORS, &params);
+
+        if (i2cHandle == NULL) {
+            Log_info0("i2c open failed");
+        }//end if
+
+        if (i2cHandle != NULL){
+            Log_info0("i2c open success");
+        }//end if
+
+        uint8_t readBuffer[4];
+        uint8_t txBuffer[4];
+
+        txBuffer[0] = MMA5983MA_CONTROL_0 | 0x02;
+        txBuffer[1] = MMA5983MA_TOUT;
+
+        // Initialize slave address of transaction
+        I2C_Transaction transaction = {0};
+        transaction.slaveAddress = MMA5983MA_ADDRESS;
+        transaction.writeBuf = txBuffer;
+        transaction.writeCount = 2;//0 indicates data will be read from the register
+        transaction.readBuf = readBuffer;
+        transaction.readCount = 0;
+        Log_info1("transaction status: %d", transaction.status);
+
+        bool i2cTransferStatus = I2C_transfer(i2cHandle, &transaction);
+
+
+        if (i2cTransferStatus == false) {
+            if (transaction.status == I2C_STATUS_ADDR_NACK) {
+                Log_info0("I2C Address not acknowledged");
+            }//end if
+        }//end status if
+
+
+        Task_sleep(100000); //100000 - 1 second
+        transaction.writeBuf = txBuffer;
+        transaction.writeCount = 0;//0 indicates data will be read from the register
+        transaction.readBuf = readBuffer;
+        transaction.readCount = 2;
+        Log_info1("transaction status: %d", transaction.status);
+
+        i2cTransferStatus = I2C_transfer(i2cHandle, &transaction);
+
+
+        if (i2cTransferStatus == false) {
+            if (transaction.status == I2C_STATUS_ADDR_NACK) {
+                Log_info0("I2C Address not acknowledged");
+            }//end if
+        }//end status if
+
+
+
+
+        Log_info1("read 0: %d", (uintptr_t)readBuffer[0]);
+        Log_info1("read 1: %d", (uintptr_t)readBuffer[1]);
+        Log_info1("read 2: %d", (uintptr_t)readBuffer[2]);
+        Log_info1("read 3: %d", (uintptr_t)readBuffer[3]);
+
+        I2C_close(i2cHandle);
+
+        Log_info0("i2c closed");
+        //Log_info1("Tout: %d", readBuffer[1]);
+        printf("Tout %d\n", readBuffer);
 
     }
   }
@@ -2717,7 +2842,8 @@ static void multi_role_handleKeys(uint8_t keys)
       //right button handler
         Log_info0("Right Button Pressed");
 
-        nvmWriteBuf[1] = 0x20;
+        nvmBuf[1] = 0x20;
+        osal_snv_write(0x80, 10, (uint8_t *)nvmBuf);
       //multi_role_doConnect(0);
 
 
@@ -3749,6 +3875,9 @@ static void multi_role_tickSend (void){
 
     Log_info0("TICKSEND -------------------------");
 
+    //enable postAdvScan
+    postAdvScan = true;
+
     //ensure all other advertising sets are disabled
     GapAdv_disable(advHandle);
     GapAdv_disable(advHandleTime);
@@ -3774,14 +3903,16 @@ static void multi_role_tickSend (void){
         Util_restartClock(&clkTimeSync, 5000);
         Util_startClock(&clkTimeSync);
     }
-    //get preAdv clock time - as advertising starts
-    ticksPreAdv = Clock_getTicks();
-    Log_info1("ticksPreAdv %d", ticksPreAdv);
+
 
     tickServer = true;
     timeClient = false;
 
     PIN_setOutputValue(ledPinHandle, CONFIG_PIN_0, 0);
+
+    //get preAdv clock time - as advertising starts
+    ticksPreAdv = Clock_getTicks();
+    Log_info1("ticksPreAdv %d", ticksPreAdv);
 
     //enable advertising
     GapAdv_enable(advHandleTicks, GAP_ADV_ENABLE_OPTIONS_USE_MAX_EVENTS, 1);
@@ -3920,6 +4051,7 @@ static void multi_role_tickIsolation (void) {
     Log_info3("TX (%d) + RX (%d) = Combined (%d)", txDelay, ticksDiffScan, combinedTickDelay);
 
 
+
     //start clock
     uint32_t startingTimeClock = originalClockValue - combinedTickDelay;
     Log_info2("Starting Clock with adjustment (%d) to: %d",combinedTickDelay, startingTimeClock);
@@ -3933,12 +4065,18 @@ static void multi_role_tickIsolation (void) {
 
     if (timerStarted == true){
         Log_info1("TRUE: right before change of clock: %d", Clock_getTicks());
+        Log_info1("startingTimeclock %d", startingTimeClock);
+        //Util_stopClock(&clkSecondsSet);
         Util_restartClock(&clkSecondsSet, startingTimeClock);
 
     }//end if
+    Log_info1("Ticks (post setting clock): %d", Clock_getTicks());
 
     //perform processing here:
     multi_role_performIntervalTask();
+
+
+
 
 
     //function to call this after set time...
@@ -4135,7 +4273,6 @@ static void multi_role_initialDeviceDiscovery(void){
 
 static void multi_role_determineSurroundingDevices(int numFound) {
 
-
     int downDevTarget = 99;
 
     int currentDevAlpha = ownDevAlpha;
@@ -4171,6 +4308,12 @@ static void multi_role_determineSurroundingDevices(int numFound) {
     //PUT CODE IN TO ORDER THE LIST AS TO DETERMINE THE NEXT DEVICE TO CONNECT TO
 
 
+    //if the device is the last device in the line
+    //want the last device to broadcast AA
+    if (noDownDevs == 0){
+        targetDevAlpha = 65;
+        targetDevNum = 65;
+    }//end if
 
     //check to see if the variable is the same as original
     if (downDevTarget != 99){
@@ -4179,6 +4322,8 @@ static void multi_role_determineSurroundingDevices(int numFound) {
         multi_role_findDeviceFromList(numFound, 1, 2);
 
     }//end if
+
+    Log_info2("Target Alpha (%d), Num (%d)", targetDevAlpha, targetDevNum);
 
     //call the application event to enable normal device state
     multi_role_enqueueMsg(MR_EVT_POSTINITSETUP, NULL);
@@ -4197,6 +4342,7 @@ static void multi_role_findDeviceFromList (int numFound, int deviceToFind, int d
 
         //filter by devices according to directionOfDevice
         if (surroundingDevs[i].location == directionOfDevice){
+            Log_info0("first if");
 
             //filter by the distance from the current device
             if (surroundingDevs[i].distance == deviceToFind){
@@ -4216,33 +4362,25 @@ void multi_role_nvmTaskFxn(UArg a0, UArg a1){
     ICall_registerApp(&nvmEntity, &nvmEvent);
 
     while(1){
-        Task_sleep(1500000); //100000 - 1 second
+        Task_sleep(2000000); //100000 - 1 second
 
-        nvm_status = osal_snv_read(0x80, 10, (uint8_t *)nvmReadBuf);
+        nvm_status = osal_snv_read(0x80, 10, (uint8_t *)nvmBuf);
 
 
         if (nvm_status != SUCCESS){
             //initial write
+            Log_info1("SNV Read Fail: %d", nvm_status);
             Log_info0("Initial Write");
-            nvmWriteBuf[1] = 0x12;
-            nvmWriteBuf[2] = 0x12;
 
             //write(memory addr, length, data)
-            nvm_status = osal_snv_write(0x80, 10, (uint8_t *)nvmWriteBuf);
+            nvm_status = osal_snv_write(0x80, 10, (uint8_t *)nvmBuf);
         }//end if
 
-        nvm_status = osal_snv_write(0x80, 10, (uint8_t *)nvmWriteBuf);
-
-        nvmReadBuf[1] = 0x00;
-        nvmReadBuf[2] = 0x00;
-
-        nvm_status = osal_snv_read(0x80, 10, (uint8_t *)nvmReadBuf);
-
+        nvm_status = osal_snv_read(0x80, 10, (uint8_t *)nvmBuf);
 
         //output read values:
-        Log_info1("ReadBuf1: %d", nvmReadBuf[1]);
-
-
+        Log_info1(ANSI_COLOR(FG_GREEN) "ReadBuf1: %d" ANSI_COLOR(ATTR_RESET), nvmBuf[1]);
+        //Log_info1("ReadBuf1: %d", nvmBuf[1]);
 
     }//end while loop
 
