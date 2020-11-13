@@ -126,6 +126,8 @@ Target Device: cc13x2_26x2
 #define MR_EVT_POSTINITSETUP       17
 #define MR_EVT_SCAN                18
 
+#define MR_EVT_I2C_5983            19
+
 // Internal Events for RTOS application
 #define MR_ICALL_EVT                         ICALL_MSG_EVENT_ID // Event_Id_31
 #define MR_QUEUE_EVT                         UTIL_QUEUE_EVENT_ID // Event_Id_30
@@ -2121,6 +2123,110 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
         break;
     }//end scan enable application event
 
+    case MR_EVT_I2C_5983:
+    {
+        Log_info0("Beginning I2C Communication with MMC5983");
+
+        // initialize optional I2C bus parameters
+        I2C_Params params;
+        I2C_Params_init(&params);
+        params.bitRate = I2C_400kHz;
+
+        // Open I2C bus for usage
+        I2C_Handle i2cHandle = I2C_open(SENSORS, &params);
+
+        if (i2cHandle == NULL) {
+            Log_info0("i2c open failed");
+        }//end if
+
+        else {
+            Log_info0("i2c open success");
+        }//end if
+
+        uint8_t readBuffer[4];
+        uint8_t txBuffer[4];
+
+        txBuffer[0] = MMA5983MA_CONTROL_0;
+        txBuffer[1] = 0x02;
+
+        // Initialize slave address of transaction
+        I2C_Transaction transaction = {0};
+        transaction.slaveAddress = MMA5983MA_ADDRESS;
+        transaction.writeBuf = txBuffer;
+        transaction.writeCount = 2;//0 indicates data will be read from the register
+        transaction.readBuf = readBuffer;
+        transaction.readCount = 0;
+        Log_info1("transaction status: %d", transaction.status);
+
+        bool i2cTransferStatus = I2C_transfer(i2cHandle, &transaction);
+
+
+        if (i2cTransferStatus == false) {
+            if (transaction.status == I2C_STATUS_ADDR_NACK) {
+                Log_info0("I2C Address not acknowledged");
+            }//end if
+        }//end status if
+
+        I2C_close(i2cHandle);
+        i2cHandle = I2C_open(SENSORS, &params);
+
+        txBuffer[0] = MMA5983MA_TOUT;
+
+        //Task_sleep(100000); //100000 - 1 second
+        transaction.writeBuf = txBuffer;
+        transaction.writeCount = 1;//0 indicates data will be read from the register
+        transaction.readBuf = readBuffer;
+        transaction.readCount = 1;
+        Log_info1("transaction status: %d", transaction.status);
+
+        //repeat temperature sensor measurements
+
+        for (int i = 0; i< 20; i++){
+
+            if (I2C_transfer(i2cHandle, &transaction)){
+                Log_info2("Temp(%d): %d", i, (uintptr_t)readBuffer[0]);
+            }//end if
+
+            else{
+                Log_info0("I2C Bus Error");
+            }//end else
+        }//end for
+
+
+
+        //i2cTransferStatus = I2C_transfer(i2cHandle, &transaction);
+
+
+
+
+
+
+        if (i2cTransferStatus == false) {
+            if (transaction.status == I2C_STATUS_ADDR_NACK) {
+                Log_info0("I2C Address not acknowledged");
+            }//end if
+        }//end status if
+
+
+
+
+        Log_info1("read 0: %d", (uintptr_t)readBuffer[0]);
+        Log_info1("read 1: %d", (uintptr_t)readBuffer[1]);
+        Log_info1("read 2: %d", (uintptr_t)readBuffer[2]);
+        Log_info1("read 3: %d", (uintptr_t)readBuffer[3]);
+
+        I2C_close(i2cHandle);
+
+        Log_info0("i2c closed");
+        //Log_info1("Tout: %d", readBuffer[1]);
+        printf("Tout %d\n", readBuffer);
+
+
+
+
+        break;
+    }//end MR_EVT_I2C_5983
+
     default:
       // Do nothing.
       break;
@@ -2759,79 +2865,10 @@ static void multi_role_handleKeys(uint8_t keys)
          */
 
         //test for I2C connection
+        //multi_role_enqueueMsg(MR_EVT_I2C_5983, NULL);
+        MMC5983_initMag();
 
-        // initialize optional I2C bus parameters
-        I2C_Params params;
-        I2C_Params_init(&params);
-        params.bitRate = I2C_400kHz;
-
-        // Open I2C bus for usage
-        I2C_Handle i2cHandle = I2C_open(SENSORS, &params);
-
-        if (i2cHandle == NULL) {
-            Log_info0("i2c open failed");
-        }//end if
-
-        if (i2cHandle != NULL){
-            Log_info0("i2c open success");
-        }//end if
-
-        uint8_t readBuffer[4];
-        uint8_t txBuffer[4];
-
-        txBuffer[0] = MMA5983MA_CONTROL_0 | 0x02;
-        txBuffer[1] = MMA5983MA_TOUT;
-
-        // Initialize slave address of transaction
-        I2C_Transaction transaction = {0};
-        transaction.slaveAddress = MMA5983MA_ADDRESS;
-        transaction.writeBuf = txBuffer;
-        transaction.writeCount = 2;//0 indicates data will be read from the register
-        transaction.readBuf = readBuffer;
-        transaction.readCount = 0;
-        Log_info1("transaction status: %d", transaction.status);
-
-        bool i2cTransferStatus = I2C_transfer(i2cHandle, &transaction);
-
-
-        if (i2cTransferStatus == false) {
-            if (transaction.status == I2C_STATUS_ADDR_NACK) {
-                Log_info0("I2C Address not acknowledged");
-            }//end if
-        }//end status if
-
-
-        Task_sleep(100000); //100000 - 1 second
-        transaction.writeBuf = txBuffer;
-        transaction.writeCount = 0;//0 indicates data will be read from the register
-        transaction.readBuf = readBuffer;
-        transaction.readCount = 2;
-        Log_info1("transaction status: %d", transaction.status);
-
-        i2cTransferStatus = I2C_transfer(i2cHandle, &transaction);
-
-
-        if (i2cTransferStatus == false) {
-            if (transaction.status == I2C_STATUS_ADDR_NACK) {
-                Log_info0("I2C Address not acknowledged");
-            }//end if
-        }//end status if
-
-
-
-
-        Log_info1("read 0: %d", (uintptr_t)readBuffer[0]);
-        Log_info1("read 1: %d", (uintptr_t)readBuffer[1]);
-        Log_info1("read 2: %d", (uintptr_t)readBuffer[2]);
-        Log_info1("read 3: %d", (uintptr_t)readBuffer[3]);
-
-        I2C_close(i2cHandle);
-
-        Log_info0("i2c closed");
-        //Log_info1("Tout: %d", readBuffer[1]);
-        printf("Tout %d\n", readBuffer);
-
-    }
+    }//end if
   }
   else if (keys & KEY_RIGHT)
   {
@@ -2842,9 +2879,18 @@ static void multi_role_handleKeys(uint8_t keys)
       //right button handler
         Log_info0("Right Button Pressed");
 
-        nvmBuf[1] = 0x20;
-        osal_snv_write(0x80, 10, (uint8_t *)nvmBuf);
-      //multi_role_doConnect(0);
+        //nvmBuf[1] = 0x20;
+        //osal_snv_write(0x80, 10, (uint8_t *)nvmBuf);
+
+
+        //test function in magnetometer individual file
+
+        uint8_t productIDValue = MMC5983_getXValue();
+        Log_info1("temp %d", (int)productIDValue);
+
+
+
+        //multi_role_doConnect(0);
 
 
         //timerStarted = false;
