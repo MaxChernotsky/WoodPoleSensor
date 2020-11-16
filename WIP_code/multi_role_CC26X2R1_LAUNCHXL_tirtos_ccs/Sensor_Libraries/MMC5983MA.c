@@ -5,6 +5,7 @@
 //includes
 #include "MMC5983MA.h"
 #include <ti/drivers/I2C.h>
+#include <stdio.h>
 
 //I2C initialisations
 #define SENSORS 0
@@ -209,11 +210,13 @@ void MMC5983_initMag(){
 
 uint8_t MMC5983_getXValue() {
     //define local variables to be used to handle the tx and rx arrays
-    uint8_t txBuffer[1];
-    uint8_t rxBuffer[1];
+    uint8_t txBuffer[3];
+    uint8_t rxBuffer[3];
 
     //set the tx array to registers to read/write
     txBuffer[0] = MMA5983MA_XOUT_0;
+    txBuffer[1] = MMA5983MA_XOUT_1;
+    txBuffer[2] = MMA5983MA_XYZOUT_2;
 
 
 
@@ -231,14 +234,16 @@ uint8_t MMC5983_getXValue() {
     transaction.slaveAddress = MMA5983MA_ADDRESS;
 
     transaction.writeBuf = txBuffer;
-    transaction.writeCount = 1;//0 indicates data will be read from the register
+    transaction.writeCount = 3;//0 indicates data will be read from the register
     transaction.readBuf = rxBuffer;
-    transaction.readCount = 1;
+    transaction.readCount = 3;
 
     bool i2cTransferStatus = I2C_transfer(i2cHandle, &transaction);
 
     //close i2c instance
     I2C_close(i2cHandle);
+
+    printf("xout0: %d, xout1: %d, xout2: %d\n", rxBuffer[0], rxBuffer[1], rxBuffer[2]);
 
     return rxBuffer[0];
 

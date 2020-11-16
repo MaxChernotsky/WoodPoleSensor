@@ -10,7 +10,7 @@
 #define MMA5983MA_YOUT_1           0x03
 #define MMA5983MA_ZOUT_0           0x04
 #define MMA5983MA_ZOUT_1           0x05
-#define MMA5983MA_XZOUT_2          0x06
+#define MMA5983MA_XYZOUT_2         0x06
 #define MMA5983MA_TOUT             0x07
 #define MMA5983MA_STATUS           0x08
 #define MMA5983MA_CONTROL_0        0x09
