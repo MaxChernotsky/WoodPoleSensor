@@ -2885,8 +2885,11 @@ static void multi_role_handleKeys(uint8_t keys)
 
         //test function in magnetometer individual file
 
-        uint8_t productIDValue = MMC5983_getXValue();
-        Log_info1("temp %d", (int)productIDValue);
+        uint16_t * productIDValue;
+        productIDValue = MMC5983_getMagData();
+
+        //uint8_t xOnly = MMC5983_getXValue();
+        Log_info1("temp %d", productIDValue[0]);
 
 
 

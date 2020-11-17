@@ -62,10 +62,12 @@
 #define PRD_SET_2000               0x07
 
 //function declarations
+uint8_t MMC5983_readByte(uint8_t regToRead);
 uint8_t MMC5983_getProductID(void);
 static void MMC5983_updateTemperature(void);
 uint8_t MMC5983_getTemperature (int loops);
 uint8_t MMC5983_getStatus(void);
 void MMC5983_initMag(void);
 uint8_t MMC5983_getXValue();
+uint16_t * MMC5983_getMagData ();
 
