@@ -90,6 +90,9 @@ extern const uint_least8_t          CONFIG_GPIO_RLED_CONST;
 extern const uint_least8_t          CONFIG_GPIO_0_CONST;
 #define CONFIG_GPIO_0               3
 
+extern const uint_least8_t          CONFIG_5983_INT_CONST;
+#define CONFIG_5983_INT             4
+
 
 /* LEDs are active high */
 #define CONFIG_GPIO_LED_ON  (1)
@@ -97,6 +100,8 @@ extern const uint_least8_t          CONFIG_GPIO_0_CONST;
 
 #define CONFIG_LED_ON  (CONFIG_GPIO_LED_ON)
 #define CONFIG_LED_OFF (CONFIG_GPIO_LED_OFF)
+
+
 
 /*
  *  ======== I2C ========
@@ -153,6 +158,8 @@ extern const PIN_Config BoardGpioInitTable[];
 #define CONFIG_PIN_1        0x00000005
 /* Parent Signal: CONFIG_I2C_0 SCL, (DIO4) */
 #define CONFIG_PIN_2        0x00000004
+/* Parent Signal: CONFIG_5983_INT */
+#define CONFIG_PIN_3        0x00000018
 
 
 

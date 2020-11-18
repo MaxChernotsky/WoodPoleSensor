@@ -246,7 +246,7 @@ const uint_least8_t ECDH_count = CONFIG_ECDH_COUNT;
 #include <ti/drivers/GPIO.h>
 #include <ti/drivers/gpio/GPIOCC26XX.h>
 
-#define CONFIG_GPIO_COUNT 4
+#define CONFIG_GPIO_COUNT 5
 
 /*
  *  ======== gpioPinConfigs ========
@@ -261,6 +261,8 @@ GPIO_PinConfig gpioPinConfigs[] = {
     GPIOCC26XX_DIO_06 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_MED | GPIO_CFG_OUT_LOW,
     /* CONFIG_GPIO_0 */
     GPIOCC26XX_DIO_00 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_MED | GPIO_CFG_OUT_LOW,
+    /* CONFIG_5983_INT */
+    GPIOCC26XX_DIO_24 | GPIO_CFG_IN_PD | GPIO_CFG_IN_INT_HIGH,
 };
 
 /*
@@ -270,7 +272,11 @@ GPIO_PinConfig gpioPinConfigs[] = {
  *  NOTE: Unused callback entries can be omitted from the callbacks array to
  *  reduce memory usage by enabling callback table optimization
  *  (GPIO.optimizeCallbackTableSize = true)
+ *
  */
+
+extern void fxnMMC5983Int(uint_least8_t index);
+
 GPIO_CallbackFxn gpioCallbackFunctions[] = {
     /* CONFIG_GPIO_BTN1 : LaunchPad Button BTN-1 (Left) */
     NULL,
@@ -278,12 +284,15 @@ GPIO_CallbackFxn gpioCallbackFunctions[] = {
     NULL,
     /* CONFIG_GPIO_0 */
     NULL,
+    /* CONFIG_5983_INT */
+    fxnMMC5983Int
 };
 
 const uint_least8_t CONFIG_GPIO_BTN1_CONST = CONFIG_GPIO_BTN1;
 const uint_least8_t CONFIG_GPIO_BTN2_CONST = CONFIG_GPIO_BTN2;
 const uint_least8_t CONFIG_GPIO_RLED_CONST = CONFIG_GPIO_RLED;
 const uint_least8_t CONFIG_GPIO_0_CONST = CONFIG_GPIO_0;
+const uint_least8_t CONFIG_5983_INT_CONST = CONFIG_5983_INT;
 
 /*
  *  ======== GPIOCC26XX_config ========
@@ -440,6 +449,11 @@ const PIN_Config BoardGpioInitTable[CONFIG_PIN_COUNT + 1] = {
     CONFIG_PIN_1 | PIN_INPUT_EN | PIN_PULLUP | PIN_IRQ_DIS,
     /* Parent Signal: CONFIG_I2C_0 SCL, (DI06) */
     CONFIG_PIN_2 | PIN_INPUT_EN | PIN_PULLUP | PIN_IRQ_DIS,
+
+
+    // interrupt for MMC5983
+    /* Parent Signal: CONFIG_5983_INT Gpio Pin, (DIO24) */
+    CONFIG_PIN_3 | PIN_INPUT_EN |PIN_PULLDOWN | PIN_IRQ_DIS,
 
     PIN_TERMINATE
 };

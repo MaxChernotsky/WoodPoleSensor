@@ -7,6 +7,12 @@
 #include <ti/drivers/I2C.h>
 #include <stdio.h>
 
+//to use Log_info debug tools
+#include <ti/common/cc26xx/uartlog/UartLog.h>  // Comment out if using xdc Log
+
+//ability to use sleep functions
+#include <ti/sysbios/knl/Task.h>
+
 //I2C initialisations
 #define SENSORS 0
 
@@ -40,14 +46,60 @@ uint8_t MMC5983_readByte(uint8_t regToRead){
 
     bool i2cTransferStatus = I2C_transfer(i2cHandle, &transaction);
 
+    if (i2cTransferStatus){
+        printf("i2c transfer success \n");
+    }
+
     //close i2c instance
     I2C_close(i2cHandle);
 
     //return result
+
+    printf("readByte Output %d\n", rxBuffer[0]);
     return rxBuffer[0];
 
 }//end readByte
 
+
+void MMC5983_writeByte(uint8_t regToWrite, uint8_t byteToWrite){
+
+    //define local variables to be used to handle the tx and rx arrays
+    uint8_t txBuffer[2];
+
+    //set the tx array to registers to read/write
+    txBuffer[0] = regToWrite;
+    txBuffer[1] = byteToWrite;
+
+    //set the parameters to be used to communicate with i2c
+    I2C_Params params;
+    I2C_Params_init(&params);
+    params.bitRate = I2C_400kHz;
+
+    // Open I2C bus for usage
+    I2C_Handle i2cHandle = I2C_open(SENSORS, &params);
+
+    // Initialize slave address of transaction
+    I2C_Transaction transaction = {0};
+    transaction.slaveAddress = MMA5983MA_ADDRESS;
+
+    transaction.writeBuf = txBuffer;
+    transaction.writeCount = 2;//0 indicates data will be read from the register
+    transaction.readBuf = NULL;
+    transaction.readCount = 0;
+
+    bool i2cTransferStatus = I2C_transfer(i2cHandle, &transaction);
+
+    if (i2cTransferStatus){
+        printf("i2c transfer success \n");
+    }
+
+    //close i2c instance
+    I2C_close(i2cHandle);
+
+    //return result
+
+
+}//end readByte
 
 
 
@@ -205,7 +257,7 @@ void MMC5983_initMag(){
 
     //set the tx array to registers to read/write
     txBuffer[0] = MMA5983MA_CONTROL_0;
-    txBuffer[1] = MMA5983MA_CONTROL_0_AUTO_SET_RESET; //enable auto set/reset & enable magnetometer sensor readings
+    txBuffer[1] = MMA5983MA_CONTROL_0_AUTO_SET_RESET | MMA5983MA_CONTROL_0_TM_M; //enable auto set/reset & enable magnetometer sensor readings
     txBuffer[2] = MMA5983MA_CONTROL_1;
     txBuffer[3] = BW_400HZ; //set the bandwidth
 
@@ -243,15 +295,17 @@ void MMC5983_initMag(){
 }//end init
 
 
-uint8_t MMC5983_getXValue() {
-    //define local variables to be used to handle the tx and rx arrays
-    uint8_t txBuffer[3];
-    uint8_t rxBuffer[3];
+
+void MMC5983_getMagData (uint16_t * destination) {
+
+    //uint16_t combinedRead[3];
+
+    uint8_t txBuffer[1];
+    uint8_t rxBuffer[7];
 
     //set the tx array to registers to read/write
     txBuffer[0] = MMA5983MA_XOUT_0;
-    txBuffer[1] = MMA5983MA_XOUT_1;
-    txBuffer[2] = MMA5983MA_XYZOUT_2;
+
 
     //set the parameters to be used to communicate with i2c
     I2C_Params params;
@@ -266,64 +320,188 @@ uint8_t MMC5983_getXValue() {
     transaction.slaveAddress = MMA5983MA_ADDRESS;
 
     transaction.writeBuf = txBuffer;
-    transaction.writeCount = 2;//0 indicates data will be read from the register
+    transaction.writeCount = 1;//0 indicates data will be read from the register
     transaction.readBuf = rxBuffer;
-    transaction.readCount = 2;
+    transaction.readCount = 7;
 
     bool i2cTransferStatus = I2C_transfer(i2cHandle, &transaction);
+
+    if (i2cTransferStatus){
+        Log_info0("i2c transfer success");
+    }//end if
 
     //close i2c instance
     I2C_close(i2cHandle);
 
-    printf("xout0: %d, xout1: %d, xout2: %d\n", rxBuffer[0], rxBuffer[1], rxBuffer[2]);
 
-    return rxBuffer[0];
+    Log_info2("X0: %d, X1: %d", rxBuffer[0], rxBuffer[1]);
+    Log_info2("Y0: %d, Y1: %d", rxBuffer[2], rxBuffer[3]);
+    Log_info2("Z0: %d, Z1: %d", rxBuffer[4], rxBuffer[5]);
+    Log_info1("XYZ0: %d", rxBuffer[6]);
 
-}//end getXValue
+    //printf("xout0: %d, xout1: %d, y0: %d, y1: %d\n", rxBuffer[0], rxBuffer[1], rxBuffer[2], rxBuffer[3]);
 
-uint16_t * MMC5983_getMagData () {
+    destination[0] = (uint16_t)(rxBuffer[0] << 8 | rxBuffer[1]);
+    destination[1] = (uint16_t)(rxBuffer[2] << 8 | rxBuffer[3]);
+    destination[2] = (uint16_t)(rxBuffer[4] << 8 | rxBuffer[5]);
 
-    //define variables
-    uint8_t xVals[2];
-    uint8_t yVals[2];
-    uint8_t zVals[2];
-    uint8_t additionalVals[1];
+    Log_info3("X: %d, Y: %d, Z: %d", destination[0], destination[1], destination[2]);
+    //Log_info1("combined X: %d", combinedRead[0]);
 
-    uint16_t combinedRead[3];
-
-
-    //call uint8_t MMC5983_readByte() function with a number of times to access all the data required
-
-    //read x data
-    xVals[0] = MMC5983_readByte(MMA5983MA_XOUT_0);
-    xVals[1] = MMC5983_readByte(MMA5983MA_XOUT_1);
-
-    //read y data
-    yVals[0] = MMC5983_readByte(MMA5983MA_YOUT_0);
-    yVals[1] = MMC5983_readByte(MMA5983MA_YOUT_1);
-
-    //read z data
-    zVals[0] = MMC5983_readByte(MMA5983MA_ZOUT_0);
-    zVals[1] = MMC5983_readByte(MMA5983MA_ZOUT_1);
-
-    //read comb data
-    additionalVals[0] = MMC5983_readByte(MMA5983MA_XYZOUT_2);
+    //printf("x: %d, y: %d, z: %d\n", combinedRead[0], combinedRead[1], combinedRead[2]);
 
 
-    printf("x0: %d, x1: %d, y0: %d, y1: %d, z0: %d, z1: %d,  add0: %d\n", xVals[0], xVals[1], yVals[0], yVals[1], zVals[0], zVals[1], additionalVals[0]);
-
-
-    combinedRead[0] = (uint16_t)(xVals[0] << 8 | xVals[1]);
-    combinedRead[1] = (uint16_t)(yVals[0] << 8 | yVals[1]);
-    combinedRead[2] = (uint16_t)(zVals[0] << 8 | zVals[1]);
-
-
-    return combinedRead;
     //combine the data into a singular format
 
 
 }//end getMagData
 
+void MMC5983_clearInt(){
+    uint8_t statusTemp = MMC5983_readByte(MMA5983MA_STATUS);
 
+    //write 1 to the mag bit to clear the interrupt
+
+    //define local variables to be used to handle the tx and rx arrays
+    uint8_t txBuffer[1];
+
+    //set the tx array to registers to read/write
+    txBuffer[0] = statusTemp & 0x01;
+
+    //set the parameters to be used to communicate with i2c
+    I2C_Params params;
+    I2C_Params_init(&params);
+    params.bitRate = I2C_400kHz;
+
+    // Open I2C bus for usage
+    I2C_Handle i2cHandle = I2C_open(SENSORS, &params);
+
+    // Initialize slave address of transaction
+    I2C_Transaction transaction = {0};
+    transaction.slaveAddress = MMA5983MA_ADDRESS;
+
+    transaction.writeBuf = txBuffer;
+    transaction.writeCount = 1;//0 indicates data will be read from the register
+    transaction.readBuf = NULL;
+    transaction.readCount = 0;
+
+    bool i2cTransferStatus = I2C_transfer(i2cHandle, &transaction);
+
+    if (i2cTransferStatus){
+        printf("i2c transfer success \n");
+    }//end if
+
+    //close i2c instance
+    I2C_close(i2cHandle);
+
+}//end clearInt
+
+void MMC5983_set(){
+
+    MMC5983_writeByte(MMA5983MA_CONTROL_0, MMA5983MA_CONTROL_0_SET);
+
+}//end set
+
+void MMC5983_reset(){
+
+    MMC5983_writeByte(MMA5983MA_CONTROL_0, MMA5983MA_CONTROL_0_RESET);
+
+}//end reset
+
+void MMC5983_swReset(){
+
+    MMC5983_writeByte(MMA5983MA_CONTROL_1, MMA5983MA_CONTROL_1_SW_RESET);
+    //need to include a wait function for the task - needs to be help for 10mS
+
+}//end reset
+
+void MMC5983_selfTest(){
+
+    //define variables
+    uint16_t data_set[3];
+    uint16_t data_reset[3];
+    uint32_t data_delta[3];
+
+    //clear control registers
+    MMC5983_writeByte(MMA5983MA_CONTROL_0, 0x00);
+    MMC5983_writeByte(MMA5983MA_CONTROL_1, 0x00);
+    MMC5983_writeByte(MMA5983MA_CONTROL_2, 0x00);
+
+    //call set function
+    MMC5983_set();
+
+    //one-time measurement
+    MMC5983_writeByte(MMA5983MA_CONTROL_0, MMA5983MA_CONTROL_0_TM_M);
+    Task_sleep(5000);
+
+    //retrieve data
+    MMC5983_getMagData(data_set);
+
+    //call reset function
+    MMC5983_reset();
+
+    //one-time measurement
+    MMC5983_writeByte(MMA5983MA_CONTROL_0, MMA5983MA_CONTROL_0_TM_M);
+    Task_sleep(5000);
+
+    //retrieve data
+    MMC5983_getMagData(data_reset);
+
+    //determine delta data
+    for (int i = 0; i < 3; i++){
+        if (data_set[i] > data_reset[i]) {
+            data_delta[i] = data_set[i] - data_reset[i];
+            Log_info2("set: %d, reset: %d", data_set[i],  data_reset[i]);
+        }//end if
+
+        else {
+            data_delta[i] = data_reset[i] - data_set[i];
+            Log_info2("set: %d, reset: %d", data_set[i],  data_reset[i]);
+        }//end else
+
+    }//end for loop
+
+    //print out results
+    Log_info1("X axis: %d (should be >100", data_delta[0]);
+    Log_info1("Y axis: %d (should be >100", data_delta[1]);
+    Log_info1("Z axis: %d (should be >100", data_delta[2]);
+
+
+
+}//end selfTest
+
+void MMC5983_getOffset(float * destination){
+
+    uint16_t data_set[3];
+    uint16_t data_reset[3];
+
+    //call set function
+    MMC5983_set();
+
+    //one-time measurement
+    MMC5983_writeByte(MMA5983MA_CONTROL_0, MMA5983MA_CONTROL_0_TM_M);
+    Task_sleep(5000);
+
+    //retrieve data
+    MMC5983_getMagData(data_set);
+
+    //call reset function
+    MMC5983_reset();
+
+    //one-time measurement
+    MMC5983_writeByte(MMA5983MA_CONTROL_0, MMA5983MA_CONTROL_0_TM_M);
+    Task_sleep(5000);
+
+    //retrieve data
+    MMC5983_getMagData(data_reset);
+
+    for (int i = 0; i < 3; i ++){
+
+        destination[i] = ((float)data_set[i] + (float)data_reset[i])/2.0f;
+        Log_info1("destination 1: %d", destination[i]);
+
+    }//end for
+
+
+}//end getOffset
 
 

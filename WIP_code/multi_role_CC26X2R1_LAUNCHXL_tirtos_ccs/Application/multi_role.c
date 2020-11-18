@@ -604,6 +604,7 @@ static void multi_role_determineSurroundingDevices(int numFound);
 static void multi_role_addSurroundingScanInfo(uint8_t txPower, char *receivedData);
 static void multi_role_currentDeviceStatusCheck (void);
 static void multi_role_findDeviceFromList (int numFound, int deviceToFind, int directionOfDevice);
+//void gpioButtonFxn0(unsigned int index);
 
 //custom nvm task functions
 
@@ -746,6 +747,13 @@ static void multi_role_init(void)
       Log_error0("Error initialising board LED pins");
   }//end if
 
+  //GPIO_init();
+
+  // install Button callback
+  //GPIO_setCallback(CONFIG_5983_INT_CONST, fxnMMC5983Int);
+
+  // Enable interrupts
+  //GPIO_enableInt(CONFIG_5983_INT_CONST);
 
 
   Log_info2("Current Device ID in ASCII (alpha, num): %d, %d", (int)ownDevAlpha, (int)ownDevNum);
@@ -2885,11 +2893,63 @@ static void multi_role_handleKeys(uint8_t keys)
 
         //test function in magnetometer individual file
 
-        uint16_t * productIDValue;
-        productIDValue = MMC5983_getMagData();
-
+        //uint16_t * productIDValue;
+        //productIDValue = MMC5983_getMagData();
+        //MMC5983_initMag();
         //uint8_t xOnly = MMC5983_getXValue();
-        Log_info1("temp %d", productIDValue[0]);
+        //Log_info1("temp %d", xOnly);
+
+
+
+        //perform example measurement
+
+        //perform once off mag data measurement
+        MMC5983_writeByte(MMA5983MA_CONTROL_0, MMA5983MA_CONTROL_0_TM_M); //make TM_M high
+
+        //wait a bit so that the measurements can take place
+        Task_sleep(5000); //100000 - 1 second
+
+        //check the status to see what the readings have been recorded and saved
+        uint8_t statusRead = MMC5983_getStatus();
+
+        if (statusRead == 17){
+            Log_info1("Status: %d - mag readings done", statusRead);
+        }//end if
+
+        else {
+            Log_info1("Status %d - mag readings not done", statusRead);
+        }//end else
+
+
+
+        /*
+        //device has performed mag readings
+        uint8_t x0 = MMC5983_readByte(MMA5983MA_XOUT_0);
+        Log_info1("x0: %d", x0);
+        uint8_t x1 = MMC5983_readByte(MMA5983MA_XOUT_1);
+        Log_info1("x1: %d", x1);
+
+         */
+
+        //obtain all x values
+        //uint8_t xtest = MMC5983_getXValue();
+
+        //uint16_t * combinedReadValues;
+        //combinedReadValues = MMC5983_getMagData();
+        //Log_info3("X: %d, Y: %d, Z: %d", combinedReadValues[0], combinedReadValues[1], combinedReadValues[2]);
+
+        //MMC5983_selfTest();
+
+
+        float offsetMagData[3] = {0};
+
+        MMC5983_getOffset(offsetMagData);
+
+        Log_info3("X offset: %d, Y offset: %d, Z offset: %d", offsetMagData[0], offsetMagData[1], offsetMagData[2]);
+
+
+
+
 
 
 
@@ -4434,6 +4494,14 @@ void multi_role_nvmTaskFxn(UArg a0, UArg a1){
     }//end while loop
 
 }//end multi_role_nvmTaskFxn
+
+
+
+
+extern void fxnMMC5983Int(uint_least8_t index) {
+    Log_info0("interrupt called");
+}//end function
+
 
 /*********************************************************************
 *********************************************************************/

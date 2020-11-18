@@ -28,6 +28,13 @@
 #define MMA5983MA_CONTROL_0_AUTO_SET_RESET  0x20
 #define MMA5983MA_CONTROL_0_OTP_READ        0x40
 
+
+//control 1 parameters
+#define MMA5983MA_CONTROL_1_X_INHIBIT       0x04
+#define MMA5983MA_CONTROL_1_YZ_INHIBIT      0x18
+#define MMA5983MA_CONTROL_1_SW_RESET        0x80
+
+
 //control 2 parameters
 #define MMA5983MA_CONTROL_2_CONT_MODE        0x08
 #define MMA5983MA_CONTROL_2_EN_PERIODIC_SET  0x80 //needs continous mode on and auto set reset on
@@ -63,11 +70,16 @@
 
 //function declarations
 uint8_t MMC5983_readByte(uint8_t regToRead);
+void MMC5983_writeByte(uint8_t regToWrite, uint8_t byteToWrite);
 uint8_t MMC5983_getProductID(void);
 static void MMC5983_updateTemperature(void);
 uint8_t MMC5983_getTemperature (int loops);
 uint8_t MMC5983_getStatus(void);
 void MMC5983_initMag(void);
-uint8_t MMC5983_getXValue();
-uint16_t * MMC5983_getMagData ();
-
+void MMC5983_getMagData (uint16_t * destination);
+void MMC5983_clearInt();
+void MMC5983_reset();
+void MMC5983_set();
+void MMC5983_swReset();
+void MMC5983_selfTest();
+void MMC5983_getOffset(float * destination);
