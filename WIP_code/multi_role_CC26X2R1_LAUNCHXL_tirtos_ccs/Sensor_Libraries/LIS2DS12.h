@@ -6,12 +6,14 @@
 //function declarations
 uint8_t LIS2DS12_readByte(uint8_t regToRead);
 void LIS2DS12_writeByte(uint8_t regToWrite, uint8_t byteToWrite);
-uint8_t MMC5983_getWhoAmI();
+uint8_t LIS2DS12_getWhoAmI();
+uint8_t LIS2DS12_status();
+uint8_t LIS2DS12_getTemperature();
 
 //device address
 #define LIS2DS12_ADDRESS            0x1D //SDO connected to VCC
 
-//bytes associated to external sensors
+//bytes associated to external sensors (UNUSED)
 #define LIS2DS12_SENSORHUB_1        0x06
 #define LIS2DS12_SENSORHUB_2        0x07
 #define LIS2DS12_SENSORHUB_3        0x08
@@ -19,7 +21,7 @@ uint8_t MMC5983_getWhoAmI();
 #define LIS2DS12_SENSORHUB_5        0x0A
 #define LIS2DS12_SENSORHUB_6        0x0B
 
-#define LIS2DS12_MODULE_OUT         0x0C //read only register
+#define LIS2DS12_MODULE_OUT         0x0C //read only register (UNUSED)
 
 #define LIS2DS12_WHO_AM_I           0x0F //fixed value output of 43h (hex)
 
@@ -71,23 +73,23 @@ uint8_t MMC5983_getWhoAmI();
 //ODR - output data rate and power mode selection
 //      PD (power down), LP (low power)
 #define LIS2DS12_CONTROL_1_ODR_PD        0x00 //power down mode
-#define LIS2DS12_CONTROL_1_ODR_LP_1      0x08 //1Hz
-#define LIS2DS12_CONTROL_1_ODR_LP_2      0x09 //12.5Hz
-#define LIS2DS12_CONTROL_1_ODR_LP_3      0x0A //25Hz
-#define LIS2DS12_CONTROL_1_ODR_LP_4      0x0B //50Hz
-#define LIS2DS12_CONTROL_1_ODR_LP_5      0x0C //100Hz
-#define LIS2DS12_CONTROL_1_ODR_LP_6      0x0D //200Hz
-#define LIS2DS12_CONTROL_1_ODR_LP_7      0x0E //400Hz
-#define LIS2DS12_CONTROL_1_ODR_LP_8      0x0F //800Hz
+#define LIS2DS12_CONTROL_1_ODR_LP_1      0x80 //1Hz
+#define LIS2DS12_CONTROL_1_ODR_LP_2      0x90 //12.5Hz
+#define LIS2DS12_CONTROL_1_ODR_LP_3      0xA0 //25Hz
+#define LIS2DS12_CONTROL_1_ODR_LP_4      0xB0 //50Hz
+#define LIS2DS12_CONTROL_1_ODR_LP_5      0xC0 //100Hz
+#define LIS2DS12_CONTROL_1_ODR_LP_6      0xD0 //200Hz
+#define LIS2DS12_CONTROL_1_ODR_LP_7      0xE0 //400Hz
+#define LIS2DS12_CONTROL_1_ODR_LP_8      0xF0 //800Hz
 
 //      HR (high resolution)
-#define LIS2DS12_CONTROL_1_ODR_HR_1      0x01 //12.5Hz
-#define LIS2DS12_CONTROL_1_ODR_HR_2      0x02 //25Hz
-#define LIS2DS12_CONTROL_1_ODR_HR_3      0x03 //50Hz
-#define LIS2DS12_CONTROL_1_ODR_HR_4      0x04 //100Hz
-#define LIS2DS12_CONTROL_1_ODR_HR_5      0x05 //200Hz
-#define LIS2DS12_CONTROL_1_ODR_HR_6      0x06 //400Hz
-#define LIS2DS12_CONTROL_1_ODR_HR_7      0x07 //800Hz
+#define LIS2DS12_CONTROL_1_ODR_HR_1      0x10 //12.5Hz
+#define LIS2DS12_CONTROL_1_ODR_HR_2      0x20 //25Hz
+#define LIS2DS12_CONTROL_1_ODR_HR_3      0x30 //50Hz
+#define LIS2DS12_CONTROL_1_ODR_HR_4      0x40 //100Hz
+#define LIS2DS12_CONTROL_1_ODR_HR_5      0x50 //200Hz
+#define LIS2DS12_CONTROL_1_ODR_HR_6      0x60 //400Hz
+#define LIS2DS12_CONTROL_1_ODR_HR_7      0x70 //800Hz
 //      HF (high frequency)
 #define LIS2DS12_CONTROL_1_ODR_HF_1      0x5 //1600Hz
 #define LIS2DS12_CONTROL_1_ODR_HF_2      0x06 //3200Hz

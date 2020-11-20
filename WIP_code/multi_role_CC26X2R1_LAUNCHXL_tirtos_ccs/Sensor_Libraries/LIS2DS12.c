@@ -47,7 +47,7 @@ uint8_t LIS2DS12_readByte(uint8_t regToRead){
     bool i2cTransferStatus = I2C_transfer(i2cHandle, &transaction);
 
     if (i2cTransferStatus){
-        printf("i2c transfer success \n");
+        Log_info0("i2c transfer success");
     }
 
     //close i2c instance
@@ -56,6 +56,7 @@ uint8_t LIS2DS12_readByte(uint8_t regToRead){
     //return result
 
     printf("readByte Output %d\n", rxBuffer[0]);
+    Log_info1("Read: %d", rxBuffer[0]);
     return rxBuffer[0];
 
 }//end readByte
@@ -98,7 +99,17 @@ void LIS2DS12_writeByte(uint8_t regToWrite, uint8_t byteToWrite){
 }//end readByte
 
 //function to get the product ID of the device
-uint8_t MMC5983_getWhoAmI(){
+uint8_t LIS2DS12_getWhoAmI(){
     return LIS2DS12_readByte(LIS2DS12_WHO_AM_I);
+}//end getProductID
+
+//function to get the status of the device
+uint8_t LIS2DS12_status(){
+    return LIS2DS12_readByte(LIS2DS12_STATUS);
+}//end getProductID
+
+//function to get the status of the device
+uint8_t LIS2DS12_getTemperature(){
+    return LIS2DS12_readByte(LIS2DS12_OUT_T);
 }//end getProductID
 

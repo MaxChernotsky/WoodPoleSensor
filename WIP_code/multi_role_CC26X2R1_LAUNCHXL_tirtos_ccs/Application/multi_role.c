@@ -2958,8 +2958,20 @@ static void multi_role_handleKeys(uint8_t keys)
 
         //EXAMPLE MEASUREMENT OF ACCELEROMETER DEVICE
 
-        uint8_t whoamIvalue =  MMC5983_getWhoAmI();
-        Log_info1("who am I value: %d", whoamIvalue);
+        //get output data
+
+        //setup the device to perform readings
+        LIS2DS12_writeByte(LIS2DS12_CONTROL_1, LIS2DS12_CONTROL_1_ODR_HR_6);
+
+        //add delay
+        Task_sleep(5000); //100000 - 1 second
+
+        //read status
+        uint8_t status = LIS2DS12_status();
+        Log_info1("status: %d", status);
+
+        uint8_t temp = LIS2DS12_getTemperature();
+        Log_info1("temp: %d", temp);
 
 
     }
