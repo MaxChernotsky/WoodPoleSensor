@@ -90,6 +90,8 @@ Target Device: cc13x2_26x2
 
 //custom libraries
 #include <Sensor_Libraries/MMC5983MA.h>
+#include <Sensor_Libraries/MMC5603NJ.h>
+#include <Sensor_Libraries/LIS2DS12.h>
 
 /*********************************************************************
  * MACROS
@@ -2154,12 +2156,12 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
         uint8_t readBuffer[4];
         uint8_t txBuffer[4];
 
-        txBuffer[0] = MMA5983MA_CONTROL_0;
+        txBuffer[0] = MMC5983MA_CONTROL_0;
         txBuffer[1] = 0x02;
 
         // Initialize slave address of transaction
         I2C_Transaction transaction = {0};
-        transaction.slaveAddress = MMA5983MA_ADDRESS;
+        transaction.slaveAddress = MMC5983MA_ADDRESS;
         transaction.writeBuf = txBuffer;
         transaction.writeCount = 2;//0 indicates data will be read from the register
         transaction.readBuf = readBuffer;
@@ -2178,7 +2180,7 @@ static void multi_role_processAppMsg(mrEvt_t *pMsg)
         I2C_close(i2cHandle);
         i2cHandle = I2C_open(SENSORS, &params);
 
-        txBuffer[0] = MMA5983MA_TOUT;
+        txBuffer[0] = MMC5983MA_TOUT;
 
         //Task_sleep(100000); //100000 - 1 second
         transaction.writeBuf = txBuffer;
@@ -2874,7 +2876,12 @@ static void multi_role_handleKeys(uint8_t keys)
 
         //test for I2C connection
         //multi_role_enqueueMsg(MR_EVT_I2C_5983, NULL);
-        MMC5983_initMag();
+        //MMC5983_initMag();
+
+        //test the 5603 device
+        uint8_t product = MMC5603_getTemperature(1);
+        Log_info1("product ID: %d", product);
+
 
     }//end if
   }
@@ -2891,20 +2898,16 @@ static void multi_role_handleKeys(uint8_t keys)
         //osal_snv_write(0x80, 10, (uint8_t *)nvmBuf);
 
 
-        //test function in magnetometer individual file
-
-        //uint16_t * productIDValue;
-        //productIDValue = MMC5983_getMagData();
-        //MMC5983_initMag();
-        //uint8_t xOnly = MMC5983_getXValue();
-        //Log_info1("temp %d", xOnly);
 
 
 
-        //perform example measurement
+        // EXAMPLE MEASUREMENT OF MMC5983 DEVICE
+        /*
+
+
 
         //perform once off mag data measurement
-        MMC5983_writeByte(MMA5983MA_CONTROL_0, MMA5983MA_CONTROL_0_TM_M); //make TM_M high
+        MMC5983_writeByte(MMC5983MA_CONTROL_0, MMC5983MA_CONTROL_0_TM_M); //make TM_M high
 
         //wait a bit so that the measurements can take place
         Task_sleep(5000); //100000 - 1 second
@@ -2920,20 +2923,6 @@ static void multi_role_handleKeys(uint8_t keys)
             Log_info1("Status %d - mag readings not done", statusRead);
         }//end else
 
-
-
-        /*
-        //device has performed mag readings
-        uint8_t x0 = MMC5983_readByte(MMA5983MA_XOUT_0);
-        Log_info1("x0: %d", x0);
-        uint8_t x1 = MMC5983_readByte(MMA5983MA_XOUT_1);
-        Log_info1("x1: %d", x1);
-
-         */
-
-        //obtain all x values
-        //uint8_t xtest = MMC5983_getXValue();
-
         //uint16_t * combinedReadValues;
         //combinedReadValues = MMC5983_getMagData();
         //Log_info3("X: %d, Y: %d, Z: %d", combinedReadValues[0], combinedReadValues[1], combinedReadValues[2]);
@@ -2941,26 +2930,37 @@ static void multi_role_handleKeys(uint8_t keys)
         //MMC5983_selfTest();
 
 
-        float offsetMagData[3] = {0};
+        //float offsetMagData[3] = {0};
 
-        MMC5983_getOffset(offsetMagData);
+        //MMC5983_getOffset(offsetMagData);
 
-        Log_info3("X offset: %d, Y offset: %d, Z offset: %d", offsetMagData[0], offsetMagData[1], offsetMagData[2]);
+        //Log_info3("X offset: %d, Y offset: %d, Z offset: %d", offsetMagData[0], offsetMagData[1], offsetMagData[2]);
 
+         */
 
+        //EXAMPLE MEASUREMENT OF MMC5603NJ DEVICE
+        /*
+        //perform once off mag data measurement
+        MMC5983_writeByte(MMC5603NJ_CONTROL_0, MMC5603NJ_CONTROL_0_TM_M | MMC5603NJ_CONTROL_0_AUTO_SR_EN); //make TM_M high
 
+        //wait a bit so that the measurements can take place
+        Task_sleep(5000); //100000 - 1 second
 
+        //check the status to see what the readings have been recorded and saved
+        uint8_t statusRead = MMC5603_getStatus();
+        Log_info1("Status: %d", statusRead);
 
+        //retrieve mag data from device
+        uint16_t magDataRead[3];
+        MMC5603_getMagData(magDataRead);
 
+        */
 
-        //multi_role_doConnect(0);
+        //EXAMPLE MEASUREMENT OF ACCELEROMETER DEVICE
 
+        uint8_t whoamIvalue =  MMC5983_getWhoAmI();
+        Log_info1("who am I value: %d", whoamIvalue);
 
-        //timerStarted = false;
-        //multi_role_tickSend();
-
-        //PIN_setOutputValue(ledPinHandle, CONFIG_PIN_RLED, 0);
-        //PIN_setOutputValue(ledPinHandle, CONFIG_PIN_0, 0);
 
     }
   }
