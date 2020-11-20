@@ -2970,8 +2970,9 @@ static void multi_role_handleKeys(uint8_t keys)
         uint8_t status = LIS2DS12_status();
         Log_info1("status: %d", status);
 
-        uint8_t temp = LIS2DS12_getTemperature();
-        Log_info1("temp: %d", temp);
+
+        uint16_t accData[3];
+        LIS2DS12_getAccData(accData);
 
 
     }

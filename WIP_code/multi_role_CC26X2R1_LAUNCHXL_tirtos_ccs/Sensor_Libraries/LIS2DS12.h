@@ -9,6 +9,7 @@ void LIS2DS12_writeByte(uint8_t regToWrite, uint8_t byteToWrite);
 uint8_t LIS2DS12_getWhoAmI();
 uint8_t LIS2DS12_status();
 uint8_t LIS2DS12_getTemperature();
+void LIS2DS12_getAccData (uint16_t * destination);
 
 //device address
 #define LIS2DS12_ADDRESS            0x1D //SDO connected to VCC
